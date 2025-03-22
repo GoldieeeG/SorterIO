@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Added Google Fonts for enhanced typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="start-screen">
+        <h1>Conveyor Sort</h1>
+        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#37740207071805033714181901120e1805041805035914181a"><span class="__cf_email__" data-cfemail="285b5d5858475a5c684b47465e4d51475a5b475a5c064b4745">[email&#160;protected]</span></a></p>
+        <div class="columns">
+            <div class="column-left">
+                <button id="start-button">Start</button>
+                <button id="level-select-button">Level Select</button>
+                <button id="instructions-button">How to Play</button>
+            </div>
+            <div class="column-right">
+                <button id="power-ups-button">Power-Ups</button>
+                <button id="settings-button-start">Settings</button>
+                <button id="stats-button">Stats</button>
+            </div>
+        </div>
+        <p>Created by Goldie 2025</p>
+        <p id="version-text">Alpha v0.37</p>
+    </div>
+    <div id="stats-screen" style="display: none;">
+        <h2>Player Stats</h2>
+        <p>Total Items Sorted: <span id="total-sorted">Coming Soon</span></p>
+        <p>Red Cubes Sorted: <span id="red-sorted">Coming Soon</span></p>
+        <p>Blue Triangles Sorted: <span id="blue-sorted">Coming Soon</span></p>
+        <p>Yellow Spheres Sorted: <span id="yellow-sorted">Coming Soon</span></p>
+        <p>Levels Failed: <span id="levels-failed">0</span></p>
+        <h2>Achievements</h2>
+        <ul id="achievements-list"></ul>
+        <button id="back-to-start-from-stats">Back</button>
+    </div>
+    <div id="level-select-screen" style="display: none;">
+        <h2>Level Select</h2>
+        <div id="level-columns">
+            <div class="level-column">
+                <button class="level-button" id="level-1-button">Level 1</button>
+                <button class="level-button" id="level-2-button" disabled>Level 2 (Locked)</button>
+                <button class="level-button" id="level-3-button" disabled>Level 3 (Locked)</button>
+                <button class="level-button" id="level-4-button" disabled>Level 4 (Locked)</button>
+                <button class="level-button" id="level-5-button" disabled>Level 5 (Locked)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-6-button" disabled>Level 6 (Locked)</button>
+                <button class="level-button" id="level-7-button" disabled>Level 7 (Locked)</button>
+                <button class="level-button" id="level-8-button" disabled>Level 8 (Locked)</button>
+                <button class="level-button" id="level-9-button" disabled>Level 9 (Locked)</button>
+                <button class="level-button" id="level-10-button" disabled>Level 10 (Locked)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-11-button" disabled>Level 11 (Locked)</button>
+                <button class="level-button" id="level-12-button" disabled>Level 12 (Locked)</button>
+                <button class="level-button" id="level-13-button" disabled>Level 13 (Locked)</button>
+                <button class="level-button" id="level-14-button" disabled>Level 14 (Locked)</button>
+                <button class="level-button" id="level-15-button" disabled>Level 15 (Locked)</button>
+            </div>
+        </div>
+        <div id="level-select-buttons">
+            <button id="back-to-start">Back</button>
+            <button id="next-page-button">Next Page</button>
+        </div>
+    </div>
+    <div id="level-select-page-2" style="display: none;">
+        <h2>Level Select (Page 2)</h2>
+        <div id="level-columns-page-2">
+            <div class="level-column">
+                <button class="level-button" id="level-16-button" disabled>Level 16 (Coming Soon)</button>
+                <button class="level-button" id="level-17-button" disabled>Level 17 (Coming Soon)</button>
+                <button class="level-button" id="level-18-button" disabled>Level 18 (Coming Soon)</button>
+                <button class="level-button" id="level-19-button" disabled>Level 19 (Coming Soon)</button>
+                <button class="level-button" id="level-20-button" disabled>Level 20 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-21-button" disabled>Level 21 (Coming Soon)</button>
+                <button class="level-button" id="level-22-button" disabled>Level 22 (Coming Soon)</button>
+                <button class="level-button" id="level-23-button" disabled>Level 23 (Coming Soon)</button>
+                <button class="level-button" id="level-24-button" disabled>Level 24 (Coming Soon)</button>
+                <button class="level-button" id="level-25-button" disabled>Level 25 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-26-button" disabled>Level 26 (Coming Soon)</button>
+                <button class="level-button" id="level-27-button" disabled>Level 27 (Coming Soon)</button>
+                <button class="level-button" id="level-28-button" disabled>Level 28 (Coming Soon)</button>
+                <button class="level-button" id="level-29-button" disabled>Level 29 (Coming Soon)</button>
+                <button class="level-button" id="level-30-button" disabled>Level 30 (Coming Soon)</button>
+            </div>
+        </div>
+        <div id="level-select-buttons-page-2">
+            <button id="prev-page-button">Previous Page</button>
+            <button id="back-to-start-page-2">Back</button>
+        </div>
+    </div>
+    <div id="level-start-screen" style="display: none;">
+        <h2>Level <span id="selected-level-number">1</span></h2>
+        <button id="level-start-button">Start</button>
+        <button id="back-to-level-select-from-start">Back to Level Select</button>
+        <button id="back-to-main-menu-from-start">Back to Main Menu</button>
+    </div>
+    <div id="game-ui" style="display: none;">
+        <div id="title">Conveyor Sort</div>
+        <div id="level-display">Level 1</div>
+        <div id="lives-container">
+            <span id="lives-text">Lives: 3</span>
+            <span class="heart" id="heart1">♥</span>
+            <span class="heart" id="heart2">♥</span>
+            <span class="heart" id="heart3">♥</span>
+        </div>
+        <div id="needed-container">
+            Items needed for next level: <span id="needed-count">0</span>/<span id="needed-total">15</span>
+            <div id="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+        <div id="top-sorted-container">
+            Top Sorted: <span id="top-sorted-count">0</span>
+        </div>
+        <div id="power-up-status" style="display: none;"></div>
+        <div id="version-container">Alpha v0.35</div>
+        <button id="restart-button">Restart Game</button>
+        <button id="pause-resume-button">Pause</button>
+        <button id="end-level-button" style="display: none;">Complete Level</button>
+    </div>
+    <div id="pause-screen" style="display: none;">
+        <h2>Paused</h2>
+        <button id="resume-button">Resume</button>
+        <button id="settings-button-pause">Settings</button>
+        <button id="back-to-start-pause">Back to Start</button>
+        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#9deadabaeb1acaa9ebdb0a8bdb1b0a8bba7b1acadb1acaaf0bdb1b3"><span class="__cf_email__" data-cfemail="1a696f6a6a75686e5a7975746c7f6375686975686e34797577">[email&#160;protected]</span></a></p>
+    </div>
+    <div id="game-over-screen" style="display: none;">
+        <h2>Level Failed</h2>
+        <p>You sorted <span id="game-over-sort-count">0</span> out of <span id="game-over-needed-count">15</span> items needed!</p>
+        <button id="restart-from-game-over">Restart Level</button>
+        <button id="back-to-start-from-game-over">Back to Start</button>
+    </div>
+    <div id="level-complete-screen" style="display: none;">
+        <h2>Level <span id="completed-level">1</span> Complete!</h2>
+        <p>You sorted <span id="level-complete-sort-count">0</span> items!</p>
+        <button id="start-next-level">Start Level <span id="next-level">2</span></button>
+        <button id="back-to-level-select">Back to Level Selection</button>
+        <button id="settings-from-level-complete">Settings</button>
+        <button id="back-to-main-menu">Main Menu</button>
+    </div>
+    <div id="instructions-screen" style="display: none;">
+        <h2>How to Play</h2>
+        <h3>Basics</h3>
+        <p>Drag items to matching bins: red cubes to red, blue triangles to blue, yellow spheres to yellow (from Level 10). Sort enough items (e.g., 15 for Level 1) to unlock the next level. Miss or sort wrong, lose a life (3 per level). Lose all lives to fail.</p>
+        <button id="back-instructions">Back</button>
+    </div>
+    <div id="power-ups-screen" style="display: none;">
+        <h2>Power-Ups</h2>
+        <p>Rare stars spawn with different effects when sorted into any bin:</p>
+        <ul>
+            <li><img src="slow_conveyor.png" alt="Slow Conveyor" width="50"> Purple ("Slow Conveyor"): Slows the belt for 5 seconds.</li>
+            <li><img src="speed_boost.png" alt="Speed Boost" width="50"> Green ("Speed Boost"): Doubles the belt speed for 5 seconds—challenge mode!</li>
+            <li><img src="extra_life.png" alt="Extra Life" width="50"> Orange ("Extra Life"): Adds one life (max 3).</li>
+            <li><img src="freeze.png" alt="Freeze" width="50"> Cyan ("Freeze"): Stops the belt for 3 seconds.</li>
+        </ul>
+        <p>More power-ups coming soon!</p>
+        <button id="back-power-ups">Back</button>
+    </div>
+    <div id="settings-screen" style="display: none;">
+        <h2>Settings</h2>
+        <label><input type="checkbox" id="mute-sounds"> Mute Game Sounds</label>
+        <label>Game Sounds Volume: <input type="range" id="sounds-volume" min="0" max="1" step="0.1" value="1"></label>
+        <label><input type="checkbox" id="mute-music"> Mute Music</label>
+        <label>Music Volume: <input type="range" id="music-volume" min="0" max="1" step="0.1" value="1"></label>
+        <button id="reset-game-data">Reset Game Data</button> <!-- New Reset Button -->
+        <button id="close-settings">Close</button>
+        <p id="game-paused-text" style="display: none;">Game Paused</p>
+    </div>
+    <button id="dev-tools-button">Dev Tools</button>
+    <div id="dev-tools-bubble" style="display: none;">
+        <h3>Developer Tools</h3>
+        <button id="unlock-all-button">Unlock All Levels</button>
+        <button id="spawn-power-up-button">Spawn Power Up</button>
+        <button id="close-dev-tools">Close</button>
+        <p id="dev-game-paused" style="display: none;">Game Paused</p>
+    </div>
+    <div id="power-up-menu" style="display: none;">
+        <h3>Select Power-Up</h3>
+        <button id="spawn-slow-conveyor">Slow Conveyor</button>
+        <button id="spawn-speed-boost">Speed Boost</button>
+        <button id="spawn-extra-life">Extra Life</button>
+        <button id="spawn-freeze">Freeze</button>
+        <div id="power-up-menu-buttons">
+            <button id="back-to-dev-tools">Back to Dev Tools</button>
+            <button id="close-power-up-menu">Close</button>
+        </div>
+    </div>
+    <div id="spawn-notification" style="display: none;"></div>
+    <audio id="sort-success" src="chime.wav" preload="auto"></audio>
+    <audio id="sort-fail" src="buzz.wav" preload="auto"></audio>
+    <audio id="level-success" src="level_success.wav" preload="auto"></audio>
+    <audio id="game-music" src="gamemusic.wav" preload="auto" loop></audio>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="game.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9247d3a37d60b042',t:'MTc0MjY2ODkyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

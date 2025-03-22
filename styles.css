@@ -1,0 +1,379 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Roboto', sans-serif;
+    color: #ffffff;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+}
+
+#start-screen, #pause-screen, #settings-screen, #level-select-screen, #level-select-page-2, #game-over-screen, #level-complete-screen, #instructions-screen, #stats-screen, #dev-tools-bubble, #power-up-menu, #level-start-screen, #power-ups-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(50, 50, 50, 0.9) url('https://threejs.org/examples/textures/metal_diffuse.jpg') repeat; /* Metallic texture */
+    padding: 30px;
+    border-radius: 15px;
+    color: #ffffff;
+    text-align: center;
+    z-index: 20;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+#start-screen .columns {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+#start-screen .column-left, #start-screen .column-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#start-screen h1 {
+    margin: 0 0 15px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 40px;
+    text-shadow: 0 0 5px #28a745, 0 0 10px #28a745; /* Glow effect */
+}
+
+#pause-screen h2, #settings-screen h2, #level-select-screen h2, #level-select-page-2 h2, #game-over-screen h2, #level-complete-screen h2, #instructions-screen h2, #stats-screen h2, #dev-tools-bubble h3, #power-up-menu h3, #level-start-screen h2 {
+    margin: 0 0 25px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 36px;
+    text-shadow: 0 0 5px #ff8c00, 0 0 10px #ff8c00; /* Glow effect */
+}
+
+#instructions-screen h3 {
+    margin: 20px 0 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    text-shadow: 0 0 3px #ffffff;
+}
+
+#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #dev-tools-bubble button, #power-up-menu button, #level-start-screen button {
+    display: block;
+    margin: 15px auto;
+    padding: 12px 25px;
+    font-size: 20px;
+    background: linear-gradient(135deg, #28a745, #218838); /* Gradient */
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: scale(1.05); /* Slight enlargement */
+}
+
+#start-screen p, #pause-screen p, #settings-screen p, #level-select-screen p, #level-select-page-2 p, #game-over-screen p, #level-complete-screen p, #instructions-screen p, #stats-screen p, #dev-tools-bubble p, #power-up-menu p {
+    margin: 10px 0;
+    font-size: 18px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+#settings-screen #game-paused-text, #dev-tools-bubble #dev-game-paused {
+    margin-top: 15px;
+    font-size: 20px;
+    color: #ffcc00;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+#settings-screen label {
+    display: block;
+    margin: 15px 0;
+    font-size: 20px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+#settings-screen input[type="range"] {
+    vertical-align: middle;
+    width: 150px;
+}
+
+#level-select-screen, #level-select-page-2 {
+    transform: translate(-50%, -50%) scale(0.75);
+}
+
+#level-columns, #level-columns-page-2 {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.level-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.level-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    width: 130px;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #28a745, #218838);
+}
+
+#level-select-buttons, #level-select-buttons-page-2, #power-up-menu-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+#level-select-screen button:disabled, #level-select-page-2 button:disabled, #power-up-menu button:disabled {
+    background: linear-gradient(135deg, #666666, #4d4d4d);
+    cursor: not-allowed;
+}
+
+#title {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 40px;
+    font-weight: bold;
+    color: #ffffff;
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 5px #28a745;
+    z-index: 10;
+}
+
+#level-display {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+    z-index: 10;
+}
+
+#lives-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+}
+
+#lives-text {
+    font-size: 28px;
+    color: #ffffff;
+    margin-right: 15px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+.heart {
+    font-size: 80px;
+    color: #dc3545;
+    margin: 0 10px;
+}
+
+.heart.lost {
+    color: #6c757d;
+}
+
+#needed-container {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ff8c00, #e07b00);
+    padding: 8px 16px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 5px #ff8c00;
+    z-index: 10;
+    text-align: center;
+}
+
+#progress-bar-container {
+    width: 250px;
+    height: 12px;
+    background: #333333;
+    border-radius: 6px;
+    margin: 10px auto 0;
+    overflow: hidden;
+    z-index: 10;
+}
+
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #28a745;
+    transition: width 0.3s ease;
+}
+
+#top-sorted-container {
+    position: absolute;
+    top: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffffff;
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+    padding: 8px 16px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 5px #6f42c1;
+    z-index: 10;
+}
+
+#power-up-status {
+    position: absolute;
+    top: 190px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    color: #ffd700;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+    z-index: 10;
+    text-align: center;
+    line-height: 22px;
+}
+
+#version-container {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 20px;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+    z-index: 10;
+}
+
+#restart-button, #pause-resume-button {
+    position: absolute;
+    right: 10px;
+    top: 160px;
+    padding: 15px 30px;
+    font-size: 22px;
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s, background 0.2s;
+}
+
+#restart-button {
+    top: 100px;
+}
+
+#pause-resume-button {
+    top: 160px;
+}
+
+#end-level-button {
+    position: absolute;
+    top: 260px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 30px;
+    font-size: 22px;
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s, background 0.2s;
+}
+
+#restart-button:hover, #pause-resume-button:hover, #end-level-button:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: scale(1.05);
+}
+
+#end-level-button:hover {
+    background: linear-gradient(135deg, #c82333, #b21f2d);
+}
+
+.power-up-text {
+    position: absolute;
+    font-size: 16px;
+    color: #ffffff;
+    text-align: center;
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000; /* Outline effect */
+}
+
+#dev-tools-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    padding: 12px 25px;
+    font-size: 20px;
+    background: linear-gradient(135deg, #007bff, #0062cc);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 30;
+    transition: transform 0.2s, background 0.2s;
+}
+
+#dev-tools-button:hover {
+    background: linear-gradient(135deg, #0062cc, #0056b3);
+    transform: scale(1.05);
+}
+
+#spawn-notification {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: #28a745;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 20px;
+    z-index: 50;
+    opacity: 1;
+    animation: fadeInOut 3.5s ease forwards;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    90% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+
+/* Existing power-ups styling retained */
+#power-ups-screen img {
+    vertical-align: middle;
+    margin-right: 10px;
+}
