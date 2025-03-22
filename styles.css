@@ -377,3 +377,21 @@ body {
     vertical-align: middle;
     margin-right: 10px;
 }
+
+/* Media query for mobile devices */
+@media (max-width: 768px) {
+    button {
+        padding: 15px 30px;
+        font-size: 24px;
+    }
+    #title {
+        font-size: 32px;
+        padding: 8px 16px;
+    }
+    #level-display, #lives-text, #needed-container, #top-sorted-container, #power-up-status, #version-container {
+        font-size: 20px;
+    }
+    .heart {
+        font-size: 60px;
+    }
+}

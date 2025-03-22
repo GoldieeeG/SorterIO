@@ -1262,34 +1262,51 @@ function restartGame() {
     }
 }
 
-// Mouse Event Handlers
-window.addEventListener('mousedown', (event) => {
-    if (!isPaused) {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(items);
-        
-        if (intersects.length > 0) {
-            selectedItem = intersects[0].object;
-            selectedItem.userData.isDragging = true;
-        }
+// Mouse and Touch Event Handlers
+function getEventPosition(event) {
+    let x, y;
+    if (event.type.startsWith('mouse')) {
+        x = event.clientX;
+        y = event.clientY;
+    } else if (event.type.startsWith('touch')) {
+        const touch = event.touches[0] || event.changedTouches[0];
+        x = touch.clientX;
+        y = touch.clientY;
     }
-});
+    return { x, y };
+}
 
-window.addEventListener('mousemove', (event) => {
+function onStart(event) {
+    event.preventDefault();
+    if (isPaused) return;
+
+    const pos = getEventPosition(event);
+    mouse.x = (pos.x / window.innerWidth) * 2 - 1;
+    mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(items);
+
+    if (intersects.length > 0) {
+        selectedItem = intersects[0].object;
+        selectedItem.userData.isDragging = true;
+    }
+}
+
+function onMove(event) {
+    event.preventDefault();
     if (selectedItem && !isPaused) {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        
+        const pos = getEventPosition(event);
+        mouse.x = (pos.x / window.innerWidth) * 2 - 1;
+        mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
+
         raycaster.setFromCamera(mouse, camera);
         const intersectPoint = new THREE.Vector3();
         if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
             const shapeType = selectedItem.userData.type;
-            const offset = getOffset({type: shapeType}); // NEW: Get offset for dragging
-            selectedItem.position.set(intersectPoint.x, conveyorHeight + offset, intersectPoint.z); // CHANGED: Adjusted y to conveyorHeight + offset
-            selectedItem.position.z = Math.max(-18, Math.min(20, selectedItem.position.z)); // CHANGED: Updated bounds to match new conveyor z (-18 to 20)
+            const offset = getOffset({type: shapeType});
+            selectedItem.position.set(intersectPoint.x, conveyorHeight + offset, intersectPoint.z);
+            selectedItem.position.z = Math.max(-18, Math.min(20, selectedItem.position.z));
             updatePowerUpTextPosition(selectedItem);
         }
 
@@ -1299,16 +1316,16 @@ window.addEventListener('mousemove', (event) => {
                 const itemPos = selectedItem.position;
                 const distance = Math.sqrt(Math.pow(itemPos.x - binPos.x, 2) + Math.pow(itemPos.z - binPos.z, 2));
                 const isCorrectBin = bin.color === selectedItem.material.color.getHex();
-                // Adjusted distance for scaled bins (1.5 * 1.1 = 1.65)
                 bin.mesh.children[0].visible = distance < 1.65 && isCorrectBin && !selectedItem.userData.effect;
             });
         }
     } else if (window.bins) {
         window.bins.forEach(bin => bin.mesh.children[0].visible = false);
     }
-});
+}
 
-window.addEventListener('mouseup', (event) => {
+function onEnd(event) {
+    event.preventDefault();
     if (selectedItem && !isPaused) {
         const itemColor = selectedItem.material.color.getHex();
         let sorted = false;
@@ -1319,7 +1336,6 @@ window.addEventListener('mouseup', (event) => {
             for (const bin of window.bins) {
                 const binPos = bin.mesh.position;
                 const distance = Math.sqrt(Math.pow(itemPos.x - binPos.x, 2) + Math.pow(itemPos.z - binPos.z, 2));
-                // Adjusted for scaled bins (1.5 * 1.1 = 1.65)
                 const withinBounds = Math.abs(itemPos.x - binPos.x) <= 1.65 && Math.abs(itemPos.z - binPos.z) <= 1.65;
                 if (distance < 1.65 && withinBounds) {
                     sorted = true;
@@ -1469,7 +1485,15 @@ window.addEventListener('mouseup', (event) => {
             window.bins.forEach(bin => bin.mesh.children[0].visible = false);
         }
     }
-});
+}
+
+// Add event listeners for mouse and touch
+window.addEventListener('mousedown', onStart);
+window.addEventListener('touchstart', onStart, { passive: false });
+window.addEventListener('mousemove', onMove);
+window.addEventListener('touchmove', onMove, { passive: false });
+window.addEventListener('mouseup', onEnd);
+window.addEventListener('touchend', onEnd, { passive: false });
 
 function loseLife() {
     mistakesMade = true;
