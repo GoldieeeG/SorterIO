@@ -215,7 +215,7 @@ function getOffset(shape) {
     if (shape.type.startsWith('powerUp')) return 1; // Radius for icosahedron
 }
 
-// Define Achievements
+// Define Achievements (Updated with 15 new ones)
 const achievements = [
     { id: "novice_sorter", name: "Novice Sorter", description: "Sort 50 items in total" },
     { id: "red_master", name: "Red Master", description: "Sort 25 red cubes" },
@@ -225,7 +225,23 @@ const achievements = [
     { id: "power_up_user", name: "Power-Up User", description: "Use any power-up" },
     { id: "speed_demon", name: "Speed Demon", description: "Complete a level in under 2 minutes" },
     { id: "perfectionist", name: "Perfectionist", description: "Sort all items correctly without any mistakes in a level" },
-    { id: "combo_king", name: "Combo King", description: "Sort 10 items in a row without mistakes" }
+    { id: "combo_king", name: "Combo King", description: "Sort 10 items in a row without mistakes" },
+    // New Achievements
+    { id: "green_guru", name: "Green Guru", description: "Sort 25 green cones" },
+    { id: "shape_shifter", name: "Shape Shifter", description: "Sort one of each shape in a single level" },
+    { id: "color_coordinator", name: "Color Coordinator", description: "Sort 5 items of the same color in a row" },
+    { id: "power_up_pro", name: "Power-Up Pro", description: "Use 3 different power-ups in a single level" },
+    { id: "quick_sorter", name: "Quick Sorter", description: "Sort 20 items in under 1 minute" },
+    { id: "marathon_sorter", name: "Marathon Sorter", description: "Sort 100 items in a single session" },
+    { id: "level_conqueror", name: "Level Conqueror", description: "Complete level 10" },
+    { id: "master_sorter", name: "Master Sorter", description: "Complete all levels" },
+    { id: "power_up_collector", name: "Power-Up Collector", description: "Collect 10 power-ups in total" },
+    { id: "speed_runner", name: "Speed Runner", description: "Complete a level in under 1 minute" },
+    { id: "endurance_tester", name: "Endurance Tester", description: "Play for 30 minutes in a single session" },
+    { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape" },
+    { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color" },
+    { id: "lucky_sorter", name: "Lucky Sorter", description: "Sort an item correctly on the first try in a level" },
+    { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once" }
 ];
 
 function createItem() {
@@ -544,6 +560,35 @@ let musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 1;
 let levelStartTime = null;
 let mistakesMade = false;
 let currentStreak = 0;
+
+// NEW: Additional variables for new achievements
+let sortedShapesThisLevel = new Set();
+let consecutiveColorStreak = 0;
+let lastSortedColor = null;
+let sessionStartTime = Date.now();
+let sessionItemsSorted = 0;
+let shapeCounts = {
+    cube: parseInt(localStorage.getItem('shape_cube')) || 0,
+    triangle: parseInt(localStorage.getItem('shape_triangle')) || 0,
+    sphere: parseInt(localStorage.getItem('shape_sphere')) || 0,
+    cone: parseInt(localStorage.getItem('shape_cone')) || 0
+};
+let colorCounts = {
+    0xff0000: parseInt(localStorage.getItem('color_red')) || 0,
+    0x0000ff: parseInt(localStorage.getItem('color_blue')) || 0,
+    0xffff00: parseInt(localStorage.getItem('color_yellow')) || 0,
+    0x00ff00: parseInt(localStorage.getItem('color_green')) || 0
+};
+let firstSortInLevel = true;
+let powerUpsUsedThisLevel = new Set();
+let totalPowerUpsCollected = parseInt(localStorage.getItem('totalPowerUpsCollected')) || 0;
+let powerUpsUsed = JSON.parse(localStorage.getItem('powerUpsUsed')) || {
+    slow: false,
+    speed: false,
+    extraLife: false,
+    freeze: false
+};
+let levelItemsSorted = 0;
 
 let levelUnlocks = JSON.parse(localStorage.getItem('levelUnlocks')) || { 
     2: false, 3: false, 4: false, 5: false, 
@@ -938,6 +983,22 @@ addButtonListeners('reset-game-data', () => {
         unlockedAchievements = {};
         localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
 
+        // Reset new stats
+        shapeCounts = { cube: 0, triangle: 0, sphere: 0, cone: 0 };
+        colorCounts = { 0xff0000: 0, 0x0000ff: 0, 0xffff00: 0, 0x00ff00: 0 };
+        totalPowerUpsCollected = 0;
+        powerUpsUsed = { slow: false, speed: false, extraLife: false, freeze: false };
+        localStorage.setItem('shape_cube', 0);
+        localStorage.setItem('shape_triangle', 0);
+        localStorage.setItem('shape_sphere', 0);
+        localStorage.setItem('shape_cone', 0);
+        localStorage.setItem('color_red', 0);
+        localStorage.setItem('color_blue', 0);
+        localStorage.setItem('color_yellow', 0);
+        localStorage.setItem('color_green', 0);
+        localStorage.setItem('totalPowerUpsCollected', 0);
+        localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
+
         // Update UI
         for (let i = 2; i <= 30; i++) {
             levelButtons[i].textContent = `Level ${i} (Locked)`;
@@ -1132,6 +1193,9 @@ function checkSortingAchievements() {
     if (yellowSpheresSorted >= 25) {
         unlockAchievement("yellow_pro");
     }
+    if (greenConesSorted >= 25) {
+        unlockAchievement("green_guru");
+    }
 }
 
 function updateAchievementsList() {
@@ -1180,6 +1244,13 @@ function resetGameState() {
     levelStartTime = Date.now();
     mistakesMade = false;
     currentStreak = 0;
+    // NEW: Reset per-level stats for achievements
+    sortedShapesThisLevel.clear();
+    consecutiveColorStreak = 0;
+    lastSortedColor = null;
+    firstSortInLevel = true;
+    powerUpsUsedThisLevel.clear();
+    levelItemsSorted = 0;
 }
 
 function startGame(level) {
@@ -1366,6 +1437,8 @@ function onEnd(event) {
                             } else {
                                 activePowerUps.push({ effect: 'slow', timer: 5 });
                             }
+                            powerUpsUsed.slow = true;
+                            powerUpsUsedThisLevel.add('slow');
                         } else if (sortedItem.userData.effect === 'speed') {
                             const existingSpeed = activePowerUps.find(p => p.effect === 'speed');
                             if (existingSpeed) {
@@ -1373,6 +1446,8 @@ function onEnd(event) {
                             } else {
                                 activePowerUps.push({ effect: 'speed', timer: 5 });
                             }
+                            powerUpsUsed.speed = true;
+                            powerUpsUsedThisLevel.add('speed');
                         } else if (sortedItem.userData.effect === 'extraLife') {
                             if (lives < 3) {
                                 lives++;
@@ -1380,6 +1455,8 @@ function onEnd(event) {
                                 hearts[lives - 1].classList.remove('lost');
                                 showNotification('Extra Life Gained!');
                             }
+                            powerUpsUsed.extraLife = true;
+                            powerUpsUsedThisLevel.add('extraLife');
                         } else if (sortedItem.userData.effect === 'freeze') {
                             const existingFreeze = activePowerUps.find(p => p.effect === 'freeze');
                             if (existingFreeze) {
@@ -1387,7 +1464,24 @@ function onEnd(event) {
                             } else {
                                 activePowerUps.push({ effect: 'freeze', timer: 3 });
                             }
+                            powerUpsUsed.freeze = true;
+                            powerUpsUsedThisLevel.add('freeze');
                         }
+                        totalPowerUpsCollected++;
+                        localStorage.setItem('totalPowerUpsCollected', totalPowerUpsCollected);
+                        localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
+                        
+                        // NEW: Check power-up related achievements
+                        if (totalPowerUpsCollected >= 10) {
+                            unlockAchievement("power_up_collector");
+                        }
+                        if (powerUpsUsed.slow && powerUpsUsed.speed && powerUpsUsed.extraLife && powerUpsUsed.freeze) {
+                            unlockAchievement("power_up_master");
+                        }
+                        if (powerUpsUsedThisLevel.size >= 3) {
+                            unlockAchievement("power_up_pro");
+                        }
+
                         updatePowerUpStatus();
                         animatePowerUp(sortedItem, 'shrink', () => {
                             if (sortedItem.userData.textDiv) {
@@ -1415,18 +1509,36 @@ function onEnd(event) {
                                 if (index !== -1) items.splice(index, 1);
                                 sortCount++;
                                 totalItemsSorted++;
+                                sessionItemsSorted++;
+                                levelItemsSorted++;
                                 if (sortedItem.userData.type === 'cube') {
                                     redCubesSorted++;
+                                    shapeCounts.cube++;
+                                    colorCounts[0xff0000]++;
                                     localStorage.setItem('redCubesSorted', redCubesSorted);
+                                    localStorage.setItem('shape_cube', shapeCounts.cube);
+                                    localStorage.setItem('color_red', colorCounts[0xff0000]);
                                 } else if (sortedItem.userData.type === 'triangle') {
                                     blueTrianglesSorted++;
+                                    shapeCounts.triangle++;
+                                    colorCounts[0x0000ff]++;
                                     localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
+                                    localStorage.setItem('shape_triangle', shapeCounts.triangle);
+                                    localStorage.setItem('color_blue', colorCounts[0x0000ff]);
                                 } else if (sortedItem.userData.type === 'sphere') {
                                     yellowSpheresSorted++;
+                                    shapeCounts.sphere++;
+                                    colorCounts[0xffff00]++;
                                     localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
+                                    localStorage.setItem('shape_sphere', shapeCounts.sphere);
+                                    localStorage.setItem('color_yellow', colorCounts[0xffff00]);
                                 } else if (sortedItem.userData.type === 'cone') {
                                     greenConesSorted++;
+                                    shapeCounts.cone++;
+                                    colorCounts[0x00ff00]++;
                                     localStorage.setItem('greenConesSorted', greenConesSorted);
+                                    localStorage.setItem('shape_cone', shapeCounts.cone);
+                                    localStorage.setItem('color_green', colorCounts[0x00ff00]);
                                 }
                                 localStorage.setItem('totalItemsSorted', totalItemsSorted);
                                 checkSortingAchievements();
@@ -1443,8 +1555,50 @@ function onEnd(event) {
                                     unlockAchievement("combo_king");
                                 }
 
+                                // NEW: Update stats and check sorting-related achievements
+                                sortedShapesThisLevel.add(sortedItem.userData.type);
+                                const currentColor = sortedItem.material.color.getHex();
+                                if (currentColor === lastSortedColor) {
+                                    consecutiveColorStreak++;
+                                    if (consecutiveColorStreak >= 5) {
+                                        unlockAchievement("color_coordinator");
+                                    }
+                                } else {
+                                    consecutiveColorStreak = 1;
+                                    lastSortedColor = currentColor;
+                                }
+                                if (firstSortInLevel) {
+                                    firstSortInLevel = false;
+                                    unlockAchievement("lucky_sorter");
+                                }
+                                if (sortedShapesThisLevel.size >= 4) { // Assumes 4 shapes: cube, triangle, sphere, cone
+                                    unlockAchievement("shape_shifter");
+                                }
+                                const timeElapsed = (Date.now() - levelStartTime) / 1000; // in seconds
+                                if (levelItemsSorted >= 20 && timeElapsed < 60) {
+                                    unlockAchievement("quick_sorter");
+                                }
+                                if (sessionItemsSorted >= 100) {
+                                    unlockAchievement("marathon_sorter");
+                                }
+                                for (const shape in shapeCounts) {
+                                    if (shapeCounts[shape] >= 50) {
+                                        unlockAchievement("shape_specialist");
+                                        break; // Unlock once per sort to avoid multiple triggers
+                                    }
+                                }
+                                for (const color in colorCounts) {
+                                    if (colorCounts[color] >= 50) {
+                                        unlockAchievement("color_specialist");
+                                        break; // Unlock once per sort to avoid multiple triggers
+                                    }
+                                }
+
                                 if (sortCount >= itemsNeeded) {
                                     const timeElapsed = (Date.now() - levelStartTime) / 1000; // in seconds
+                                    if (timeElapsed < 60) {
+                                        unlockAchievement("speed_runner");
+                                    }
                                     if (timeElapsed < 120) {
                                         unlockAchievement("speed_demon");
                                     }
@@ -1453,6 +1607,12 @@ function onEnd(event) {
                                     }
                                     if (lives === 3) {
                                         unlockAchievement("survivor");
+                                    }
+                                    if (currentLevel === 10) {
+                                        unlockAchievement("level_conqueror");
+                                    }
+                                    if (currentLevel === 30) {
+                                        unlockAchievement("master_sorter");
                                     }
                                     if (currentLevel < 30) {
                                         levelUnlocks[currentLevel + 1] = true;
@@ -1654,6 +1814,12 @@ function animate(timestamp) {
             scene.remove(particles[index]);
             particles.splice(index, 1);
         });
+
+        // NEW: Check for endurance_tester achievement
+        const sessionTime = (Date.now() - sessionStartTime) / 1000 / 60; // in minutes
+        if (sessionTime >= 30) {
+            unlockAchievement("endurance_tester");
+        }
     }
 
     renderer.render(scene, camera);
