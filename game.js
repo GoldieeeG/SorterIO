@@ -872,7 +872,8 @@ addButtonListeners('close-settings', () => {
     }
 });
 
-addButtonListeners('mute-sounds', (e) => {
+// Add correct event listeners for mute checkboxes and volume sliders
+document.getElementById('mute-sounds').addEventListener('change', (e) => {
     isMutedSounds = e.target.checked;
     successSound.muted = isMutedSounds;
     failSound.muted = isMutedSounds;
@@ -880,22 +881,24 @@ addButtonListeners('mute-sounds', (e) => {
     localStorage.setItem('isMutedSounds', isMutedSounds);
 });
 
-addButtonListeners('mute-music', (e) => {
+document.getElementById('mute-music').addEventListener('change', (e) => {
     isMutedMusic = e.target.checked;
     gameMusic.muted = isMutedMusic;
     localStorage.setItem('isMutedMusic', isMutedMusic);
 });
 
-addButtonListeners('sounds-volume', (e) => {
+document.getElementById('sounds-volume').addEventListener('input', (e) => {
     soundVolume = parseFloat(e.target.value);
+    console.log('Setting sound volume to', soundVolume); // Added for debugging
     successSound.volume = soundVolume;
     failSound.volume = soundVolume;
     levelSuccessSound.volume = soundVolume;
     localStorage.setItem('soundVolume', soundVolume);
 });
 
-addButtonListeners('music-volume', (e) => {
+document.getElementById('music-volume').addEventListener('input', (e) => {
     musicVolume = parseFloat(e.target.value);
+    console.log('Setting music volume to', musicVolume); // Added for debugging
     gameMusic.volume = musicVolume;
     localStorage.setItem('musicVolume', musicVolume);
 });
@@ -1229,7 +1232,8 @@ function togglePause() {
         pauseScreen.style.display = 'none';
         pauseResumeButton.textContent = 'Pause';
         if (!isMutedMusic) {
-            gameMusic.play().catch(e => console.log('Music play failed:', e));
+            console.log('Playing game music');
+            gameMusic.play().catch(e => console.log('Error playing game music:', e));
         }
     }
 }
@@ -1269,7 +1273,8 @@ function restartGame() {
     resetGameState();
     startSpawning();
     if (!isMutedMusic) {
-        gameMusic.play().catch(e => console.log('Music play failed:', e));
+        console.log('Playing game music');
+        gameMusic.play().catch(e => console.log('Error playing game music:', e));
     }
 }
 
@@ -1391,7 +1396,10 @@ function onEnd(event) {
                             scene.remove(sortedItem);
                             const index = items.indexOf(sortedItem);
                             if (index !== -1) items.splice(index, 1);
-                            if (!isMutedSounds) successSound.play();
+                            if (!isMutedSounds) {
+                                console.log('Playing success sound');
+                                successSound.play().catch(e => console.log('Error playing success sound:', e));
+                            }
                             currentStreak++;
                             if (currentStreak >= 10) {
                                 unlockAchievement("combo_king");
@@ -1426,7 +1434,10 @@ function onEnd(event) {
                                 topSortedCountDisplay.textContent = Math.max(sortCount, topSortedPerLevel[currentLevel]);
                                 topSortedPerLevel[currentLevel] = Math.max(sortCount, topSortedPerLevel[currentLevel]);
                                 progressBar.style.width = `${Math.min((sortCount / itemsNeeded) * 100, 100)}%`;
-                                if (!isMutedSounds) successSound.play();
+                                if (!isMutedSounds) {
+                                    console.log('Playing success sound');
+                                    successSound.play().catch(e => console.log('Error playing success sound:', e));
+                                }
                                 currentStreak++;
                                 if (currentStreak >= 10) {
                                     unlockAchievement("combo_king");
@@ -1452,7 +1463,10 @@ function onEnd(event) {
                                         }
                                     }
                                     endLevelButton.style.display = 'block';
-                                    if (!isMutedSounds) levelSuccessSound.play();
+                                    if (!isMutedSounds) {
+                                        console.log('Playing level success sound');
+                                        levelSuccessSound.play().catch(e => console.log('Error playing level success sound:', e));
+                                    }
                                 }
                             });
                         } else {
@@ -1463,7 +1477,10 @@ function onEnd(event) {
                                 scene.remove(sortedItem);
                                 const index = items.indexOf(sortedItem);
                                 if (index !== -1) items.splice(index, 1);
-                                if (!isMutedSounds) failSound.play();
+                                if (!isMutedSounds) {
+                                    console.log('Playing fail sound');
+                                    failSound.play().catch(e => console.log('Error playing fail sound:', e));
+                                }
                                 loseLife();
                             });
                             sorted = true;
@@ -1485,7 +1502,10 @@ function onEnd(event) {
                 if (index !== -1) items.splice(index, 1);
                 if (selectedItem.userData.needsSorting) {
                     loseLife();
-                    if (!isMutedSounds) failSound.play();
+                    if (!isMutedSounds) {
+                        console.log('Playing fail sound');
+                        failSound.play().catch(e => console.log('Error playing fail sound:', e));
+                    }
                 }
             } else {
                 selectedItem.userData.isDragging = false;
@@ -1499,12 +1519,12 @@ function onEnd(event) {
 }
 
 // Add event listeners for mouse and touch
-window.addEventListener('mousedown', onStart);
-window.addEventListener('touchstart', onStart, { passive: false });
-window.addEventListener('mousemove', onMove);
-window.addEventListener('touchmove', onMove, { passive: false });
-window.addEventListener('mouseup', onEnd);
-window.addEventListener('touchend', onEnd, { passive: false });
+renderer.domElement.addEventListener('mousedown', onStart);
+renderer.domElement.addEventListener('touchstart', onStart, { passive: false });
+renderer.domElement.addEventListener('mousemove', onMove);
+renderer.domElement.addEventListener('touchmove', onMove, { passive: false });
+renderer.domElement.addEventListener('mouseup', onEnd);
+renderer.domElement.addEventListener('touchend', onEnd, { passive: false });
 
 function loseLife() {
     mistakesMade = true;
@@ -1613,7 +1633,10 @@ function animate(timestamp) {
             items.splice(index, 1);
             if (item.userData.needsSorting) {
                 loseLife();
-                if (!isMutedSounds) failSound.play();
+                if (!isMutedSounds) {
+                    console.log('Playing fail sound');
+                    failSound.play().catch(e => console.log('Error playing fail sound:', e));
+                }
             }
         });
 
