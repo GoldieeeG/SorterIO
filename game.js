@@ -1302,6 +1302,7 @@ function onStart(event) {
             selectedItem = intersects[0].object;
             selectedItem.userData.isDragging = true;
             activeTouchId = 'mouse';
+            console.log('Mouse drag started');
         }
     } else if (event.type === 'touchstart') {
         for (let i = 0; i < event.touches.length; i++) {
@@ -1314,6 +1315,7 @@ function onStart(event) {
                 selectedItem = intersects[0].object;
                 selectedItem.userData.isDragging = true;
                 activeTouchId = touch.identifier;
+                console.log(`Touch drag started with id: ${activeTouchId}`);
                 break;
             }
         }
@@ -1377,6 +1379,7 @@ function onEnd(event) {
     }
 
     if (shouldEnd) {
+        console.log(`Drag ended for ${activeTouchId}`);
         const itemColor = selectedItem.material.color.getHex();
         let sorted = false;
         const itemPos = selectedItem.position;
