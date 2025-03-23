@@ -1566,13 +1566,14 @@ function loseLife() {
 }
 
 function animatePowerUp(item, type, callback) {
-    let elapsed = 0;
+    console.log(`Starting ${type} animation for item`);
+    const startTime = performance.now();
     const duration = type === 'shrink' ? 500 : 300;
     const startScale = item.scale.clone();
     const startPosition = item.position.clone();
 
-    function animate(timestamp) {
-        elapsed += 16;
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
         if (type === 'shrink') {
@@ -1589,6 +1590,7 @@ function animatePowerUp(item, type, callback) {
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {
+            console.log(`Completed ${type} animation for item`);
             item.scale.copy(startScale);
             item.position.copy(startPosition);
             callback();
