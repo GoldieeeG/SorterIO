@@ -196,7 +196,7 @@ body {
 
 #needed-container {
     position: absolute;
-    top: 80px;
+    top: 100px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 28px;
@@ -230,7 +230,7 @@ body {
 
 #top-sorted-container {
     position: absolute;
-    top: 140px;
+    top: 180px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 28px;
@@ -246,7 +246,7 @@ body {
 
 #power-up-status {
     position: absolute;
-    top: 190px;
+    top: 240px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 22px;
@@ -395,4 +395,10 @@ body {
     .heart {
         font-size: 60px;
     }
+}
+
+/* Added for ad containers */
+.ad-container {
+    margin: 20px 0;
+    text-align: center;
 }
