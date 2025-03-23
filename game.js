@@ -1686,11 +1686,8 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     const aspect = window.innerWidth / window.innerHeight;
-    if (aspect < 1) { // Portrait mode
-        camera.position.set(0, 25, 25);
-    } else {
-        camera.position.set(0, 20, 20);
-    }
+    const d = Math.max(20, 20 / aspect); // Dynamically adjust camera distance
+    camera.position.set(0, d, d);
     camera.lookAt(0, 0, 0);
 });
 
