@@ -386,13 +386,63 @@ body {
         font-size: 24px;
     }
     #title {
-        font-size: 32px;
-        padding: 8px 16px;
+        top: 10px;
+        font-size: 24px;
+        padding: 5px 10px;
     }
-    #level-display, #lives-text, #needed-container, #top-sorted-container, #power-up-status, #version-container {
-        font-size: 20px;
+    #level-display {
+        top: 5px;
+        left: 5px;
+        font-size: 18px;
+    }
+    #lives-container {
+        top: 5px;
+        right: 5px;
+    }
+    #lives-text {
+        font-size: 18px;
     }
     .heart {
-        font-size: 60px;
+        font-size: 40px;
+        margin: 0 5px;
+    }
+    #needed-container {
+        top: 50px;
+        font-size: 18px;
+        padding: 5px 10px;
+    }
+    #progress-bar-container {
+        width: 150px;
+        height: 8px;
+    }
+    #top-sorted-container {
+        top: 100px;
+        font-size: 18px;
+        padding: 5px 10px;
+    }
+    #power-up-status {
+        top: 140px;
+        font-size: 16px;
+        padding: 4px 8px;
+    }
+    #version-container {
+        bottom: 5px;
+        left: 5px;
+        font-size: 14px;
+        padding: 4px 8px;
+    }
+    #restart-button, #pause-resume-button {
+        right: 5px;
+        top: 100px;
+        padding: 10px 20px;
+        font-size: 18px;
+    }
+    #restart-button {
+        top: 60px;
+    }
+    #end-level-button {
+        top: 180px;
+        padding: 10px 20px;
+        font-size: 18px;
     }
 }

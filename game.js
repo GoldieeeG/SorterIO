@@ -506,6 +506,7 @@ function setupBins() {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let selectedItem = null;
+let activeTouchId = null; // NEW: Track active touch identifier
 const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -conveyorHeight); // CHANGED: Adjusted to -conveyorHeight (-2.03)
 
 // Audio Setup
@@ -1291,57 +1292,94 @@ function onStart(event) {
     event.preventDefault();
     if (isPaused) return;
 
-    const pos = getEventPosition(event);
-    mouse.x = (pos.x / window.innerWidth) * 2 - 1;
-    mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(items);
-
-    if (intersects.length > 0) {
-        selectedItem = intersects[0].object;
-        selectedItem.userData.isDragging = true;
+    if (event.type === 'mousedown') {
+        const pos = getEventPosition(event);
+        mouse.x = (pos.x / window.innerWidth) * 2 - 1;
+        mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(items);
+        if (intersects.length > 0) {
+            selectedItem = intersects[0].object;
+            selectedItem.userData.isDragging = true;
+            activeTouchId = 'mouse';
+        }
+    } else if (event.type === 'touchstart') {
+        for (let i = 0; i < event.touches.length; i++) {
+            const touch = event.touches[i];
+            mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(items);
+            if (intersects.length > 0) {
+                selectedItem = intersects[0].object;
+                selectedItem.userData.isDragging = true;
+                activeTouchId = touch.identifier;
+                break;
+            }
+        }
     }
 }
 
 function onMove(event) {
     event.preventDefault();
-    if (selectedItem && !isPaused) {
-        const pos = getEventPosition(event);
-        mouse.x = (pos.x / window.innerWidth) * 2 - 1;
-        mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
+    if (!selectedItem || isPaused) return;
 
-        raycaster.setFromCamera(mouse, camera);
-        const intersectPoint = new THREE.Vector3();
-        if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
-            const shapeType = selectedItem.userData.type;
-            const offset = getOffset({type: shapeType});
-            selectedItem.position.set(intersectPoint.x, conveyorHeight + offset, intersectPoint.z);
-            selectedItem.position.z = Math.max(-18, Math.min(20, selectedItem.position.z));
-            updatePowerUpTextPosition(selectedItem);
+    let pos;
+    if (event.type === 'mousemove' && activeTouchId === 'mouse') {
+        pos = getEventPosition(event);
+    } else if (event.type === 'touchmove' && activeTouchId !== null) {
+        const touch = Array.from(event.touches).find(t => t.identifier === activeTouchId);
+        if (touch) {
+            pos = { x: touch.clientX, y: touch.clientY };
+        } else {
+            return;
         }
+    } else {
+        return;
+    }
 
-        if (window.bins) {
-            window.bins.forEach(bin => {
-                const binPos = bin.mesh.position;
-                const itemPos = selectedItem.position;
-                const distance = Math.sqrt(Math.pow(itemPos.x - binPos.x, 2) + Math.pow(itemPos.z - binPos.z, 2));
-                const isCorrectBin = bin.color === selectedItem.material.color.getHex();
-                bin.mesh.children[0].visible = distance < 1.65 && isCorrectBin && !selectedItem.userData.effect;
-            });
-        }
-    } else if (window.bins) {
-        window.bins.forEach(bin => bin.mesh.children[0].visible = false);
+    mouse.x = (pos.x / window.innerWidth) * 2 - 1;
+    mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersectPoint = new THREE.Vector3();
+    if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
+        const shapeType = selectedItem.userData.type;
+        const offset = getOffset({type: shapeType});
+        selectedItem.position.set(intersectPoint.x, conveyorHeight + offset, intersectPoint.z);
+        selectedItem.position.z = Math.max(-18, Math.min(20, selectedItem.position.z));
+        updatePowerUpTextPosition(selectedItem);
+    }
+
+    if (window.bins) {
+        window.bins.forEach(bin => {
+            const binPos = bin.mesh.position;
+            const itemPos = selectedItem.position;
+            const distance = Math.sqrt(Math.pow(itemPos.x - binPos.x, 2) + Math.pow(itemPos.z - binPos.z, 2));
+            const isCorrectBin = bin.color === selectedItem.material.color.getHex();
+            bin.mesh.children[0].visible = distance < 1.65 && isCorrectBin && !selectedItem.userData.effect;
+        });
     }
 }
 
 function onEnd(event) {
     event.preventDefault();
-    if (selectedItem && !isPaused) {
+    if (!selectedItem || isPaused) return;
+
+    let shouldEnd = false;
+    if (event.type === 'mouseup' && activeTouchId === 'mouse') {
+        shouldEnd = true;
+    } else if (event.type === 'touchend') {
+        const changedTouch = Array.from(event.changedTouches).find(t => t.identifier === activeTouchId);
+        if (changedTouch) {
+            shouldEnd = true;
+        }
+    }
+
+    if (shouldEnd) {
         const itemColor = selectedItem.material.color.getHex();
         let sorted = false;
-        let sortedItem = selectedItem;
-        const itemPos = sortedItem.position;
+        const itemPos = selectedItem.position;
 
         if (window.bins) {
             for (const bin of window.bins) {
@@ -1350,32 +1388,32 @@ function onEnd(event) {
                 const withinBounds = Math.abs(itemPos.x - binPos.x) <= 1.65 && Math.abs(itemPos.z - binPos.z) <= 1.65;
                 if (distance < 1.65 && withinBounds) {
                     sorted = true;
-                    sortedItem.position.copy(binPos);
-                    sortedItem.position.y += 1.5;
+                    selectedItem.position.copy(binPos);
+                    selectedItem.position.y += 1.5;
 
-                    if (sortedItem.userData.effect) {
-                        if (sortedItem.userData.effect === 'slow') {
+                    if (selectedItem.userData.effect) {
+                        if (selectedItem.userData.effect === 'slow') {
                             const existingSlow = activePowerUps.find(p => p.effect === 'slow');
                             if (existingSlow) {
                                 existingSlow.timer += 5;
                             } else {
                                 activePowerUps.push({ effect: 'slow', timer: 5 });
                             }
-                        } else if (sortedItem.userData.effect === 'speed') {
+                        } else if (selectedItem.userData.effect === 'speed') {
                             const existingSpeed = activePowerUps.find(p => p.effect === 'speed');
                             if (existingSpeed) {
                                 existingSpeed.timer += 5;
                             } else {
                                 activePowerUps.push({ effect: 'speed', timer: 5 });
                             }
-                        } else if (sortedItem.userData.effect === 'extraLife') {
+                        } else if (selectedItem.userData.effect === 'extraLife') {
                             if (lives < 3) {
                                 lives++;
                                 livesText.textContent = `Lives: ${lives}`;
                                 hearts[lives - 1].classList.remove('lost');
                                 showNotification('Extra Life Gained!');
                             }
-                        } else if (sortedItem.userData.effect === 'freeze') {
+                        } else if (selectedItem.userData.effect === 'freeze') {
                             const existingFreeze = activePowerUps.find(p => p.effect === 'freeze');
                             if (existingFreeze) {
                                 existingFreeze.timer += 3;
@@ -1384,12 +1422,12 @@ function onEnd(event) {
                             }
                         }
                         updatePowerUpStatus();
-                        animatePowerUp(sortedItem, 'shrink', () => {
-                            if (sortedItem.userData.textDiv) {
-                                document.body.removeChild(sortedItem.userData.textDiv);
+                        animatePowerUp(selectedItem, 'shrink', () => {
+                            if (selectedItem.userData.textDiv) {
+                                document.body.removeChild(selectedItem.userData.textDiv);
                             }
-                            scene.remove(sortedItem);
-                            const index = items.indexOf(sortedItem);
+                            scene.remove(selectedItem);
+                            const index = items.indexOf(selectedItem);
                             if (index !== -1) items.splice(index, 1);
                             if (!isMutedSounds) successSound.play();
                             currentStreak++;
@@ -1398,25 +1436,25 @@ function onEnd(event) {
                             }
                         });
                         unlockAchievement("power_up_user");
-                    } else if (sortedItem.userData.needsSorting) {
+                    } else if (selectedItem.userData.needsSorting) {
                         if (bin.color === itemColor) {
-                            animatePowerUp(sortedItem, 'shrink', () => {
-                                createParticles(sortedItem.position, sortedItem.material.color); // Particle Effects: Trigger particles
-                                scene.remove(sortedItem);
-                                const index = items.indexOf(sortedItem);
+                            animatePowerUp(selectedItem, 'shrink', () => {
+                                createParticles(selectedItem.position, selectedItem.material.color); // Particle Effects: Trigger particles
+                                scene.remove(selectedItem);
+                                const index = items.indexOf(selectedItem);
                                 if (index !== -1) items.splice(index, 1);
                                 sortCount++;
                                 totalItemsSorted++;
-                                if (sortedItem.userData.type === 'cube') {
+                                if (selectedItem.userData.type === 'cube') {
                                     redCubesSorted++;
                                     localStorage.setItem('redCubesSorted', redCubesSorted);
-                                } else if (sortedItem.userData.type === 'triangle') {
+                                } else if (selectedItem.userData.type === 'triangle') {
                                     blueTrianglesSorted++;
                                     localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
-                                } else if (sortedItem.userData.type === 'sphere') {
+                                } else if (selectedItem.userData.type === 'sphere') {
                                     yellowSpheresSorted++;
                                     localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
-                                } else if (sortedItem.userData.type === 'cone') {
+                                } else if (selectedItem.userData.type === 'cone') {
                                     greenConesSorted++;
                                     localStorage.setItem('greenConesSorted', greenConesSorted);
                                 }
@@ -1456,12 +1494,12 @@ function onEnd(event) {
                                 }
                             });
                         } else {
-                            animatePowerUp(sortedItem, 'shake', () => {
-                                if (sortedItem.userData.textDiv) {
-                                    document.body.removeChild(sortedItem.userData.textDiv);
+                            animatePowerUp(selectedItem, 'shake', () => {
+                                if (selectedItem.userData.textDiv) {
+                                    document.body.removeChild(selectedItem.userData.textDiv);
                                 }
-                                scene.remove(sortedItem);
-                                const index = items.indexOf(sortedItem);
+                                scene.remove(selectedItem);
+                                const index = items.indexOf(selectedItem);
                                 if (index !== -1) items.splice(index, 1);
                                 if (!isMutedSounds) failSound.play();
                                 loseLife();
@@ -1492,6 +1530,7 @@ function onEnd(event) {
             }
         }
         selectedItem = null;
+        activeTouchId = null;
         if (window.bins) {
             window.bins.forEach(bin => bin.mesh.children[0].visible = false);
         }
@@ -1642,6 +1681,14 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const aspect = window.innerWidth / window.innerHeight;
+    if (aspect < 1) { // Portrait mode
+        camera.position.set(0, 25, 25);
+    } else {
+        camera.position.set(0, 20, 20);
+    }
+    camera.lookAt(0, 0, 0);
 });
 
 // Shadow and Renderer Settings
