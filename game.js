@@ -506,7 +506,6 @@ function setupBins() {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let selectedItem = null;
-let activeTouchId = null; // NEW: Track active touch identifier
 const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -conveyorHeight); // CHANGED: Adjusted to -conveyorHeight (-2.03)
 
 // Audio Setup
@@ -1292,97 +1291,57 @@ function onStart(event) {
     event.preventDefault();
     if (isPaused) return;
 
-    if (event.type === 'mousedown') {
-        const pos = getEventPosition(event);
-        mouse.x = (pos.x / window.innerWidth) * 2 - 1;
-        mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(items);
-        if (intersects.length > 0) {
-            selectedItem = intersects[0].object;
-            selectedItem.userData.isDragging = true;
-            activeTouchId = 'mouse';
-            console.log('Mouse drag started');
-        }
-    } else if (event.type === 'touchstart') {
-        for (let i = 0; i < event.touches.length; i++) {
-            const touch = event.touches[i];
-            mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(items);
-            if (intersects.length > 0) {
-                selectedItem = intersects[0].object;
-                selectedItem.userData.isDragging = true;
-                activeTouchId = touch.identifier;
-                console.log(`Touch drag started with id: ${activeTouchId}`);
-                break;
-            }
-        }
+    const pos = getEventPosition(event);
+    mouse.x = (pos.x / window.innerWidth) * 2 - 1;
+    mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(items);
+
+    if (intersects.length > 0) {
+        selectedItem = intersects[0].object;
+        selectedItem.userData.isDragging = true;
     }
 }
 
 function onMove(event) {
     event.preventDefault();
-    if (!selectedItem || isPaused) return;
+    if (selectedItem && !isPaused) {
+        const pos = getEventPosition(event);
+        mouse.x = (pos.x / window.innerWidth) * 2 - 1;
+        mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
 
-    let pos;
-    if (event.type === 'mousemove' && activeTouchId === 'mouse') {
-        pos = getEventPosition(event);
-    } else if (event.type === 'touchmove' && activeTouchId !== null) {
-        const touch = Array.from(event.touches).find(t => t.identifier === activeTouchId);
-        if (touch) {
-            pos = { x: touch.clientX, y: touch.clientY };
-        } else {
-            return;
+        raycaster.setFromCamera(mouse, camera);
+        const intersectPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
+            const shapeType = selectedItem.userData.type;
+            const offset = getOffset({type: shapeType});
+            selectedItem.position.set(intersectPoint.x, conveyorHeight + offset, intersectPoint.z);
+            selectedItem.position.z = Math.max(-18, Math.min(20, selectedItem.position.z));
+            updatePowerUpTextPosition(selectedItem);
         }
-    } else {
-        return;
-    }
 
-    mouse.x = (pos.x / window.innerWidth) * 2 - 1;
-    mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersectPoint = new THREE.Vector3();
-    if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
-        const shapeType = selectedItem.userData.type;
-        const offset = getOffset({type: shapeType});
-        selectedItem.position.set(intersectPoint.x, conveyorHeight + offset, intersectPoint.z);
-        selectedItem.position.z = Math.max(-18, Math.min(20, selectedItem.position.z));
-        updatePowerUpTextPosition(selectedItem);
-    }
-
-    if (window.bins) {
-        window.bins.forEach(bin => {
-            const binPos = bin.mesh.position;
-            const itemPos = selectedItem.position;
-            const distance = Math.sqrt(Math.pow(itemPos.x - binPos.x, 2) + Math.pow(itemPos.z - binPos.z, 2));
-            const isCorrectBin = bin.color === selectedItem.material.color.getHex();
-            bin.mesh.children[0].visible = distance < 1.65 && isCorrectBin && !selectedItem.userData.effect;
-        });
+        if (window.bins) {
+            window.bins.forEach(bin => {
+                const binPos = bin.mesh.position;
+                const itemPos = selectedItem.position;
+                const distance = Math.sqrt(Math.pow(itemPos.x - binPos.x, 2) + Math.pow(itemPos.z - binPos.z, 2));
+                const isCorrectBin = bin.color === selectedItem.material.color.getHex();
+                bin.mesh.children[0].visible = distance < 1.65 && isCorrectBin && !selectedItem.userData.effect;
+            });
+        }
+    } else if (window.bins) {
+        window.bins.forEach(bin => bin.mesh.children[0].visible = false);
     }
 }
 
 function onEnd(event) {
     event.preventDefault();
-    if (!selectedItem || isPaused) return;
-
-    let shouldEnd = false;
-    if (event.type === 'mouseup' && activeTouchId === 'mouse') {
-        shouldEnd = true;
-    } else if (event.type === 'touchend') {
-        const changedTouch = Array.from(event.changedTouches).find(t => t.identifier === activeTouchId);
-        if (changedTouch) {
-            shouldEnd = true;
-        }
-    }
-
-    if (shouldEnd) {
-        console.log(`Drag ended for ${activeTouchId}`);
+    if (selectedItem && !isPaused) {
         const itemColor = selectedItem.material.color.getHex();
         let sorted = false;
-        const itemPos = selectedItem.position;
+        let sortedItem = selectedItem;
+        const itemPos = sortedItem.position;
 
         if (window.bins) {
             for (const bin of window.bins) {
@@ -1391,32 +1350,32 @@ function onEnd(event) {
                 const withinBounds = Math.abs(itemPos.x - binPos.x) <= 1.65 && Math.abs(itemPos.z - binPos.z) <= 1.65;
                 if (distance < 1.65 && withinBounds) {
                     sorted = true;
-                    selectedItem.position.copy(binPos);
-                    selectedItem.position.y += 1.5;
+                    sortedItem.position.copy(binPos);
+                    sortedItem.position.y += 1.5;
 
-                    if (selectedItem.userData.effect) {
-                        if (selectedItem.userData.effect === 'slow') {
+                    if (sortedItem.userData.effect) {
+                        if (sortedItem.userData.effect === 'slow') {
                             const existingSlow = activePowerUps.find(p => p.effect === 'slow');
                             if (existingSlow) {
                                 existingSlow.timer += 5;
                             } else {
                                 activePowerUps.push({ effect: 'slow', timer: 5 });
                             }
-                        } else if (selectedItem.userData.effect === 'speed') {
+                        } else if (sortedItem.userData.effect === 'speed') {
                             const existingSpeed = activePowerUps.find(p => p.effect === 'speed');
                             if (existingSpeed) {
                                 existingSpeed.timer += 5;
                             } else {
                                 activePowerUps.push({ effect: 'speed', timer: 5 });
                             }
-                        } else if (selectedItem.userData.effect === 'extraLife') {
+                        } else if (sortedItem.userData.effect === 'extraLife') {
                             if (lives < 3) {
                                 lives++;
                                 livesText.textContent = `Lives: ${lives}`;
                                 hearts[lives - 1].classList.remove('lost');
                                 showNotification('Extra Life Gained!');
                             }
-                        } else if (selectedItem.userData.effect === 'freeze') {
+                        } else if (sortedItem.userData.effect === 'freeze') {
                             const existingFreeze = activePowerUps.find(p => p.effect === 'freeze');
                             if (existingFreeze) {
                                 existingFreeze.timer += 3;
@@ -1425,12 +1384,12 @@ function onEnd(event) {
                             }
                         }
                         updatePowerUpStatus();
-                        animatePowerUp(selectedItem, 'shrink', () => {
-                            if (selectedItem.userData.textDiv) {
-                                document.body.removeChild(selectedItem.userData.textDiv);
+                        animatePowerUp(sortedItem, 'shrink', () => {
+                            if (sortedItem.userData.textDiv) {
+                                document.body.removeChild(sortedItem.userData.textDiv);
                             }
-                            scene.remove(selectedItem);
-                            const index = items.indexOf(selectedItem);
+                            scene.remove(sortedItem);
+                            const index = items.indexOf(sortedItem);
                             if (index !== -1) items.splice(index, 1);
                             if (!isMutedSounds) successSound.play();
                             currentStreak++;
@@ -1439,25 +1398,25 @@ function onEnd(event) {
                             }
                         });
                         unlockAchievement("power_up_user");
-                    } else if (selectedItem.userData.needsSorting) {
+                    } else if (sortedItem.userData.needsSorting) {
                         if (bin.color === itemColor) {
-                            animatePowerUp(selectedItem, 'shrink', () => {
-                                createParticles(selectedItem.position, selectedItem.material.color); // Particle Effects: Trigger particles
-                                scene.remove(selectedItem);
-                                const index = items.indexOf(selectedItem);
+                            animatePowerUp(sortedItem, 'shrink', () => {
+                                createParticles(sortedItem.position, sortedItem.material.color); // Particle Effects: Trigger particles
+                                scene.remove(sortedItem);
+                                const index = items.indexOf(sortedItem);
                                 if (index !== -1) items.splice(index, 1);
                                 sortCount++;
                                 totalItemsSorted++;
-                                if (selectedItem.userData.type === 'cube') {
+                                if (sortedItem.userData.type === 'cube') {
                                     redCubesSorted++;
                                     localStorage.setItem('redCubesSorted', redCubesSorted);
-                                } else if (selectedItem.userData.type === 'triangle') {
+                                } else if (sortedItem.userData.type === 'triangle') {
                                     blueTrianglesSorted++;
                                     localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
-                                } else if (selectedItem.userData.type === 'sphere') {
+                                } else if (sortedItem.userData.type === 'sphere') {
                                     yellowSpheresSorted++;
                                     localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
-                                } else if (selectedItem.userData.type === 'cone') {
+                                } else if (sortedItem.userData.type === 'cone') {
                                     greenConesSorted++;
                                     localStorage.setItem('greenConesSorted', greenConesSorted);
                                 }
@@ -1497,12 +1456,12 @@ function onEnd(event) {
                                 }
                             });
                         } else {
-                            animatePowerUp(selectedItem, 'shake', () => {
-                                if (selectedItem.userData.textDiv) {
-                                    document.body.removeChild(selectedItem.userData.textDiv);
+                            animatePowerUp(sortedItem, 'shake', () => {
+                                if (sortedItem.userData.textDiv) {
+                                    document.body.removeChild(sortedItem.userData.textDiv);
                                 }
-                                scene.remove(selectedItem);
-                                const index = items.indexOf(selectedItem);
+                                scene.remove(sortedItem);
+                                const index = items.indexOf(sortedItem);
                                 if (index !== -1) items.splice(index, 1);
                                 if (!isMutedSounds) failSound.play();
                                 loseLife();
@@ -1533,7 +1492,6 @@ function onEnd(event) {
             }
         }
         selectedItem = null;
-        activeTouchId = null;
         if (window.bins) {
             window.bins.forEach(bin => bin.mesh.children[0].visible = false);
         }
@@ -1566,14 +1524,13 @@ function loseLife() {
 }
 
 function animatePowerUp(item, type, callback) {
-    console.log(`Starting ${type} animation for item`);
-    const startTime = performance.now();
+    let elapsed = 0;
     const duration = type === 'shrink' ? 500 : 300;
     const startScale = item.scale.clone();
     const startPosition = item.position.clone();
 
-    function animate(currentTime) {
-        const elapsed = currentTime - startTime;
+    function animate(timestamp) {
+        elapsed += 16;
         const progress = Math.min(elapsed / duration, 1);
 
         if (type === 'shrink') {
@@ -1590,7 +1547,6 @@ function animatePowerUp(item, type, callback) {
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {
-            console.log(`Completed ${type} animation for item`);
             item.scale.copy(startScale);
             item.position.copy(startPosition);
             callback();
@@ -1686,11 +1642,6 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-
-    const aspect = window.innerWidth / window.innerHeight;
-    const d = Math.max(20, 20 / aspect); // Dynamically adjust camera distance
-    camera.position.set(0, d, d);
-    camera.lookAt(0, 0, 0);
 });
 
 // Shadow and Renderer Settings
