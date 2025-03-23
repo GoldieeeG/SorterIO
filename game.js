@@ -671,23 +671,35 @@ blueSortedDisplay.textContent = blueTrianglesSorted;
 yellowSortedDisplay.textContent = yellowSpheresSorted;
 levelsFailedDisplay.textContent = levelsFailed;
 
-// Event Listeners
-document.getElementById('start-button').addEventListener('click', () => {
-    console.log('Start button clicked');
+// Event Listeners with Touch Support
+function addButtonListeners(elementId, action) {
+    const element = document.getElementById(elementId);
+    element.addEventListener('click', (event) => {
+        event.preventDefault();
+        action(event);
+    });
+    element.addEventListener('touchend', (event) => {
+        event.preventDefault();
+        action(event);
+    }, { passive: false });
+}
+
+addButtonListeners('start-button', () => {
+    console.log('Start button clicked/touched');
     selectedLevel = 1;
     selectedLevelNumberDisplay.textContent = selectedLevel;
     startScreen.style.display = 'none';
     levelStartScreen.style.display = 'block';
 });
 
-document.getElementById('level-select-button').addEventListener('click', () => {
-    console.log('Level select button clicked');
+addButtonListeners('level-select-button', () => {
+    console.log('Level select button clicked/touched');
     startScreen.style.display = 'none';
     levelSelectScreen.style.display = 'block';
 });
 
-document.getElementById('level-1-button').addEventListener('click', () => {
-    console.log('Level 1 button clicked');
+addButtonListeners('level-1-button', () => {
+    console.log('Level 1 button clicked/touched');
     selectedLevel = 1;
     selectedLevelNumberDisplay.textContent = selectedLevel;
     levelSelectScreen.style.display = 'none';
@@ -695,9 +707,9 @@ document.getElementById('level-1-button').addEventListener('click', () => {
 });
 
 for (let i = 2; i <= 30; i++) {
-    document.getElementById(`level-${i}-button`).addEventListener('click', () => {
+    addButtonListeners(`level-${i}-button`, () => {
         if (levelUnlocks[i]) {
-            console.log(`Level ${i} button clicked`);
+            console.log(`Level ${i} button clicked/touched`);
             selectedLevel = i;
             selectedLevelNumberDisplay.textContent = selectedLevel;
             if (i <= 15) {
@@ -710,56 +722,56 @@ for (let i = 2; i <= 30; i++) {
     });
 }
 
-document.getElementById('back-to-start').addEventListener('click', () => {
-    console.log('Back to start from level select clicked');
+addButtonListeners('back-to-start', () => {
+    console.log('Back to start from level select clicked/touched');
     levelSelectScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-document.getElementById('next-page-button').addEventListener('click', () => {
-    console.log('Next page button clicked');
+addButtonListeners('next-page-button', () => {
+    console.log('Next page button clicked/touched');
     levelSelectScreen.style.display = 'none';
     levelSelectPage2.style.display = 'block';
 });
 
-document.getElementById('prev-page-button').addEventListener('click', () => {
-    console.log('Previous page button clicked');
+addButtonListeners('prev-page-button', () => {
+    console.log('Previous page button clicked/touched');
     levelSelectPage2.style.display = 'none';
     levelSelectScreen.style.display = 'block';
 });
 
-document.getElementById('back-to-start-page-2').addEventListener('click', () => {
-    console.log('Back to start from page 2 clicked');
+addButtonListeners('back-to-start-page-2', () => {
+    console.log('Back to start from page 2 clicked/touched');
     levelSelectPage2.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-document.getElementById('instructions-button').addEventListener('click', () => {
-    console.log('Instructions button clicked');
+addButtonListeners('instructions-button', () => {
+    console.log('Instructions button clicked/touched');
     startScreen.style.display = 'none';
     instructionsScreen.style.display = 'block';
 });
 
-document.getElementById('back-instructions').addEventListener('click', () => {
-    console.log('Back from instructions clicked');
+addButtonListeners('back-instructions', () => {
+    console.log('Back from instructions clicked/touched');
     instructionsScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-document.getElementById('power-ups-button').addEventListener('click', () => {
-    console.log('Power-Ups button clicked');
+addButtonListeners('power-ups-button', () => {
+    console.log('Power-Ups button clicked/touched');
     startScreen.style.display = 'none';
     powerUpsScreen.style.display = 'block';
 });
 
-document.getElementById('back-power-ups').addEventListener('click', () => {
-    console.log('Back from power-ups clicked');
+addButtonListeners('back-power-ups', () => {
+    console.log('Back from power-ups clicked/touched');
     powerUpsScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-document.getElementById('stats-button').addEventListener('click', () => {
-    console.log('Stats button clicked');
+addButtonListeners('stats-button', () => {
+    console.log('Stats button clicked/touched');
     startScreen.style.display = 'none';
     statsScreen.style.display = 'block';
     totalSortedDisplay.textContent = totalItemsSorted;
@@ -770,86 +782,86 @@ document.getElementById('stats-button').addEventListener('click', () => {
     updateAchievementsList();
 });
 
-document.getElementById('back-to-start-from-stats').addEventListener('click', () => {
-    console.log('Back to start from stats clicked');
+addButtonListeners('back-to-start-from-stats', () => {
+    console.log('Back to start from stats clicked/touched');
     statsScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-pauseResumeButton.addEventListener('click', () => {
-    console.log('Pause/resume button clicked');
+addButtonListeners('pause-resume-button', () => {
+    console.log('Pause/resume button clicked/touched');
     togglePause();
 });
 
-document.getElementById('resume-button').addEventListener('click', () => {
-    console.log('Resume button clicked');
+addButtonListeners('resume-button', () => {
+    console.log('Resume button clicked/touched');
     togglePause();
 });
 
-document.getElementById('back-to-start-pause').addEventListener('click', () => {
-    console.log('Back to start from pause clicked');
+addButtonListeners('back-to-start-pause', () => {
+    console.log('Back to start from pause clicked/touched');
     pauseScreen.style.display = 'none';
     gameUI.style.display = 'none';
     startScreen.style.display = 'block';
     cleanupGame();
 });
 
-document.getElementById('restart-from-game-over').addEventListener('click', () => {
-    console.log('Restart from game over clicked');
+addButtonListeners('restart-from-game-over', () => {
+    console.log('Restart from game over clicked/touched');
     selectedLevel = currentLevel;
     selectedLevelNumberDisplay.textContent = selectedLevel;
     gameOverScreen.style.display = 'none';
     levelStartScreen.style.display = 'block';
 });
 
-document.getElementById('back-to-start-from-game-over').addEventListener('click', () => {
-    console.log('Back to start from game over clicked');
+addButtonListeners('back-to-start-from-game-over', () => {
+    console.log('Back to start from game over clicked/touched');
     gameOverScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-document.getElementById('start-next-level').addEventListener('click', () => {
-    console.log('Start next level clicked');
+addButtonListeners('start-next-level', () => {
+    console.log('Start next level clicked/touched');
     selectedLevel = currentLevel + 1;
     selectedLevelNumberDisplay.textContent = selectedLevel;
     levelCompleteScreen.style.display = 'none';
     levelStartScreen.style.display = 'block';
 });
 
-document.getElementById('back-to-level-select').addEventListener('click', () => {
-    console.log('Back to level select clicked');
+addButtonListeners('back-to-level-select', () => {
+    console.log('Back to level select clicked/touched');
     levelCompleteScreen.style.display = 'none';
     levelSelectScreen.style.display = 'block';
 });
 
-document.getElementById('settings-from-level-complete').addEventListener('click', () => {
-    console.log('Settings from level complete clicked');
+addButtonListeners('settings-from-level-complete', () => {
+    console.log('Settings from level complete clicked/touched');
     levelCompleteScreen.style.display = 'none';
     showSettings();
 });
 
-document.getElementById('end-level-button').addEventListener('click', () => {
-    console.log('End level button clicked');
+addButtonListeners('end-level-button', () => {
+    console.log('End level button clicked/touched');
     gameUI.style.display = 'none';
     levelCompleteScreen.style.display = 'block';
     levelCompleteSortCount.textContent = sortCount;
     cleanupGame();
 });
 
-document.getElementById('settings-button-start').addEventListener('click', () => {
-    console.log('Settings from start clicked');
+addButtonListeners('settings-button-start', () => {
+    console.log('Settings from start clicked/touched');
     startScreen.style.display = 'none';
     showSettings();
 });
 
-document.getElementById('settings-button-pause').addEventListener('click', () => {
-    console.log('Settings from pause clicked');
+addButtonListeners('settings-button-pause', () => {
+    console.log('Settings from pause clicked/touched');
     pauseScreen.style.display = 'none';
     showSettings();
 });
 
-document.getElementById('close-settings').addEventListener('click', () => {
-    console.log('Close settings clicked');
+addButtonListeners('close-settings', () => {
+    console.log('Close settings clicked/touched');
     settingsScreen.style.display = 'none';
     if (gameUI.style.display === 'block') {
         pauseScreen.style.display = 'block';
@@ -860,7 +872,7 @@ document.getElementById('close-settings').addEventListener('click', () => {
     }
 });
 
-document.getElementById('mute-sounds').addEventListener('change', (e) => {
+addButtonListeners('mute-sounds', (e) => {
     isMutedSounds = e.target.checked;
     successSound.muted = isMutedSounds;
     failSound.muted = isMutedSounds;
@@ -868,13 +880,13 @@ document.getElementById('mute-sounds').addEventListener('change', (e) => {
     localStorage.setItem('isMutedSounds', isMutedSounds);
 });
 
-document.getElementById('mute-music').addEventListener('change', (e) => {
+addButtonListeners('mute-music', (e) => {
     isMutedMusic = e.target.checked;
     gameMusic.muted = isMutedMusic;
     localStorage.setItem('isMutedMusic', isMutedMusic);
 });
 
-document.getElementById('sounds-volume').addEventListener('input', (e) => {
+addButtonListeners('sounds-volume', (e) => {
     soundVolume = parseFloat(e.target.value);
     successSound.volume = soundVolume;
     failSound.volume = soundVolume;
@@ -882,15 +894,15 @@ document.getElementById('sounds-volume').addEventListener('input', (e) => {
     localStorage.setItem('soundVolume', soundVolume);
 });
 
-document.getElementById('music-volume').addEventListener('input', (e) => {
+addButtonListeners('music-volume', (e) => {
     musicVolume = parseFloat(e.target.value);
     gameMusic.volume = musicVolume;
     localStorage.setItem('musicVolume', musicVolume);
 });
 
 // Add reset game data event listener
-document.getElementById('reset-game-data').addEventListener('click', () => {
-    console.log('Reset game data button clicked');
+addButtonListeners('reset-game-data', () => {
+    console.log('Reset game data button clicked/touched');
     if (confirm('Are you sure you want to reset all game data? This will reset level progress, stats, and achievements.')) {
         // Reset level unlocks
         levelUnlocks = {
@@ -949,8 +961,8 @@ document.getElementById('reset-game-data').addEventListener('click', () => {
     }
 });
 
-document.getElementById('dev-tools-button').addEventListener('click', () => {
-    console.log('Dev tools button clicked');
+addButtonListeners('dev-tools-button', () => {
+    console.log('Dev tools button clicked/touched');
     const password = prompt('Enter password to access Dev Tools:');
     if (password === 'Skywalker') {
         if (startScreen.style.display === 'block') {
@@ -974,8 +986,8 @@ document.getElementById('dev-tools-button').addEventListener('click', () => {
     }
 });
 
-document.getElementById('unlock-all-button').addEventListener('click', () => {
-    console.log('Unlock all button clicked');
+addButtonListeners('unlock-all-button', () => {
+    console.log('Unlock all button clicked/touched');
     for (let i = 2; i <= 30; i++) {
         levelUnlocks[i] = true;
         levelButtons[i].textContent = `Level ${i}`;
@@ -986,14 +998,14 @@ document.getElementById('unlock-all-button').addEventListener('click', () => {
     showNotification('All levels have been unlocked!');
 });
 
-document.getElementById('spawn-power-up-button').addEventListener('click', () => {
-    console.log('Spawn power-up button clicked');
+addButtonListeners('spawn-power-up-button', () => {
+    console.log('Spawn power-up button clicked/touched');
     devToolsBubble.style.display = 'none';
     powerUpMenu.style.display = 'block';
 });
 
-document.getElementById('spawn-slow-conveyor').addEventListener('click', () => {
-    console.log('Spawn slow conveyor clicked');
+addButtonListeners('spawn-slow-conveyor', () => {
+    console.log('Spawn slow conveyor clicked/touched');
     if (gameUI.style.display === 'block') {
         spawnPowerUp('slow');
         console.log('Spawned Slow Conveyor power-up');
@@ -1002,8 +1014,8 @@ document.getElementById('spawn-slow-conveyor').addEventListener('click', () => {
     }
 });
 
-document.getElementById('spawn-speed-boost').addEventListener('click', () => {
-    console.log('Spawn speed boost clicked');
+addButtonListeners('spawn-speed-boost', () => {
+    console.log('Spawn speed boost clicked/touched');
     if (gameUI.style.display === 'block') {
         spawnPowerUp('speed');
         console.log('Spawned Speed Boost power-up');
@@ -1012,8 +1024,8 @@ document.getElementById('spawn-speed-boost').addEventListener('click', () => {
     }
 });
 
-document.getElementById('spawn-extra-life').addEventListener('click', () => {
-    console.log('Spawn extra life clicked');
+addButtonListeners('spawn-extra-life', () => {
+    console.log('Spawn extra life clicked/touched');
     if (gameUI.style.display === 'block') {
         spawnPowerUp('extraLife');
         console.log('Spawned Extra Life power-up');
@@ -1022,8 +1034,8 @@ document.getElementById('spawn-extra-life').addEventListener('click', () => {
     }
 });
 
-document.getElementById('spawn-freeze').addEventListener('click', () => {
-    console.log('Spawn freeze clicked');
+addButtonListeners('spawn-freeze', () => {
+    console.log('Spawn freeze clicked/touched');
     if (gameUI.style.display === 'block') {
         spawnPowerUp('freeze');
         console.log('Spawned Freeze power-up');
@@ -1032,14 +1044,14 @@ document.getElementById('spawn-freeze').addEventListener('click', () => {
     }
 });
 
-document.getElementById('back-to-dev-tools').addEventListener('click', () => {
-    console.log('Back to dev tools clicked');
+addButtonListeners('back-to-dev-tools', () => {
+    console.log('Back to dev tools clicked/touched');
     powerUpMenu.style.display = 'none';
     devToolsBubble.style.display = 'block';
 });
 
-document.getElementById('close-power-up-menu').addEventListener('click', () => {
-    console.log('Close power-up menu clicked');
+addButtonListeners('close-power-up-menu', () => {
+    console.log('Close power-up menu clicked/touched');
     powerUpMenu.style.display = 'none';
     if (gameUI.style.display === 'block' && isPaused) {
         pauseScreen.style.display = 'block';
@@ -1048,8 +1060,8 @@ document.getElementById('close-power-up-menu').addEventListener('click', () => {
     }
 });
 
-document.getElementById('close-dev-tools').addEventListener('click', () => {
-    console.log('Close dev tools clicked');
+addButtonListeners('close-dev-tools', () => {
+    console.log('Close dev tools clicked/touched');
     devToolsBubble.style.display = 'none';
     if (gameUI.style.display === 'block') {
         pauseScreen.style.display = 'block';
@@ -1058,15 +1070,15 @@ document.getElementById('close-dev-tools').addEventListener('click', () => {
     }
 });
 
-levelStartButton.addEventListener('click', () => {
-    console.log('Level start button clicked');
+addButtonListeners('level-start-button', () => {
+    console.log('Level start button clicked/touched');
     levelStartScreen.style.display = 'none';
     gameUI.style.display = 'block';
     startGame(selectedLevel);
 });
 
-backToLevelSelectFromStart.addEventListener('click', () => {
-    console.log('Back to level select from start clicked');
+addButtonListeners('back-to-level-select-from-start', () => {
+    console.log('Back to level select from start clicked/touched');
     levelStartScreen.style.display = 'none';
     if (selectedLevel <= 15) {
         levelSelectScreen.style.display = 'block';
@@ -1075,21 +1087,20 @@ backToLevelSelectFromStart.addEventListener('click', () => {
     }
 });
 
-backToMainMenuFromStart.addEventListener('click', () => {
-    console.log('Back to main menu from level start clicked');
+addButtonListeners('back-to-main-menu-from-start', () => {
+    console.log('Back to main menu from level start clicked/touched');
     levelStartScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-document.getElementById('back-to-main-menu').addEventListener('click', () => {
-    console.log('Back to main menu clicked');
+addButtonListeners('back-to-main-menu', () => {
+    console.log('Back to main menu clicked/touched');
     levelCompleteScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
-// Added event listener for Restart Game button
-document.getElementById('restart-button').addEventListener('click', () => {
-    console.log('Restart button clicked');
+addButtonListeners('restart-button', () => {
+    console.log('Restart button clicked/touched');
     restartGame();
 });
 
