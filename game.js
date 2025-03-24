@@ -279,7 +279,7 @@ function getOffset(shape) {
     if (shape.type === 'cube') return 1.125;
     if (shape.type === 'triangle') return 0.75;
     if (shape.type === 'sphere') return 1.5;
-    if (shape.type === 'cone') return 0;
+    if (shape.type === 'cone') return 1; // Updated from 0 to 1
     if (shape.type.startsWith('powerUp')) return 1;
 }
 

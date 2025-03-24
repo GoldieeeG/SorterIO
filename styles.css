@@ -397,8 +397,12 @@ body {
     }
 }
 
-/* Added for ad containers */
+/* Updated for ad containers */
 .ad-container {
     margin: 20px 0;
     text-align: center;
+    width: 300px;
+    height: 250px;
+    margin-left: auto;
+    margin-right: auto;
 }
