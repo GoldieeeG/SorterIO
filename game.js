@@ -10,7 +10,7 @@ camera.position.set(0, 20, 20);
 camera.lookAt(0, 0, 0);
 
 // Define conveyor height to match trough top (trough at y=0.03, height=2, top at y=2.03)
-const conveyorHeight = 2.03; // NEW: Added constant for conveyor height
+const conveyorHeight = 2.03;
 
 // Lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -20,7 +20,7 @@ directionalLight.position.set(10, 20, 10);
 directionalLight.castShadow = true;
 scene.add(directionalLight);
 
-// Power-Up Glow (Point Light) - Original light, not currently used dynamically
+// Power-Up Glow (Point Light)
 const powerUpLight = new THREE.PointLight(0x800080, 1, 10);
 scene.add(powerUpLight);
 
@@ -33,7 +33,7 @@ const roomMaterial = new THREE.MeshPhongMaterial({ color: 0xd3d3d3, depthTest: t
 const floorGeometry = new THREE.PlaneGeometry(roomSize, roomSize);
 const floor = new THREE.Mesh(floorGeometry, roomMaterial);
 floor.rotation.x = -Math.PI / 2;
-floor.position.y = 0; // CHANGED: Moved from -wallThickness / 2 (-0.5) to 0
+floor.position.y = 0;
 floor.receiveShadow = true;
 scene.add(floor);
 
@@ -109,9 +109,8 @@ verticalLines.forEach(geometry => {
     scene.add(line);
 });
 
-// Conveyor Belt with Moving Texture
-const beltGeometry = new THREE.PlaneGeometry(20, 38); // CHANGED: Length from 40 to 38 (z=20 to z=-18)
-let conveyorBelt, beltMaterial;
+// Conveyor Belt Material Setup
+let beltMaterial;
 const beltTextureLoader = new THREE.TextureLoader();
 beltTextureLoader.load(
     'https://threejs.org/examples/textures/uv_grid_opengl.jpg',
@@ -120,46 +119,16 @@ beltTextureLoader.load(
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(4, 8);
         beltMaterial = new THREE.MeshPhongMaterial({ map: texture, shininess: 10, depthTest: true, depthWrite: true });
-        conveyorBelt = new THREE.Mesh(beltGeometry, beltMaterial);
-        conveyorBelt.rotation.x = -Math.PI / 2;
-        conveyorBelt.position.set(0, conveyorHeight, 1); // CHANGED: y=conveyorHeight (2.03), z=1 to center (20 + -18) / 2
-        conveyorBelt.castShadow = true;
-        conveyorBelt.receiveShadow = true;
-        scene.add(conveyorBelt);
     },
     undefined,
     (error) => {
         console.error('Failed to load conveyor texture:', error);
         beltMaterial = new THREE.MeshPhongMaterial({ color: 0x333333, shininess: 10, depthTest: true, depthWrite: true });
-        conveyorBelt = new THREE.Mesh(beltGeometry, beltMaterial);
-        conveyorBelt.rotation.x = -Math.PI / 2;
-        conveyorBelt.position.set(0, conveyorHeight, 1); // CHANGED: y=conveyorHeight (2.03), z=1
-        conveyorBelt.castShadow = true;
-        conveyorBelt.receiveShadow = true;
-        scene.add(conveyorBelt);
     }
 );
 
-// Missed Trough at End (Open Box)
-const troughGeometry = new THREE.BufferGeometry();
-const troughVertices = new Float32Array([
-    -10, 0, -2,  10, 0, -2,  10, 0, 2,  -10, 0, 2,
-    -10, 0, 2,  10, 0, 2,  10, 2, 2,  -10, 2, 2,
-    -10, 0, -2,  10, 0, -2,  10, 2, -2,  -10, 2, -2,
-    -10, 0, -2,  -10, 0, 2,  -10, 2, 2,  -10, 2, -2,
-    10, 0, -2,  10, 0, 2,  10, 2, 2,  10, 2, -2
-]);
-const troughIndices = [
-    0, 1, 2,  0, 2, 3,
-    4, 5, 6,  4, 6, 7,
-    8, 9, 10, 8, 10, 11,
-    12, 13, 14, 12, 14, 15,
-    16, 17, 18, 16, 18, 19
-];
-troughGeometry.setAttribute('position', new THREE.BufferAttribute(troughVertices, 3));
-troughGeometry.setIndex(troughIndices);
-troughGeometry.computeVertexNormals();
-
+// Trough Material Setup
+let troughMaterial;
 const troughTextureLoader = new THREE.TextureLoader();
 troughTextureLoader.load(
     'https://threejs.org/examples/textures/brick_diffuse.jpg',
@@ -167,24 +136,124 @@ troughTextureLoader.load(
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(4, 1);
-        const troughMaterial = new THREE.MeshPhongMaterial({ map: texture, shininess: 5, depthTest: true, depthWrite: true });
-        const trough = new THREE.Mesh(troughGeometry, troughMaterial);
-        trough.position.set(0, 0.03, -18); // Above conveyor, unchanged as top matches conveyorHeight
-        trough.castShadow = true;
-        trough.receiveShadow = true;
-        scene.add(trough);
+        troughMaterial = new THREE.MeshPhongMaterial({ map: texture, shininess: 5, depthTest: true, depthWrite: true });
     },
     undefined,
     (error) => {
         console.error('Failed to load trough texture:', error);
-        const troughMaterial = new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 5, depthTest: true, depthWrite: true });
+        troughMaterial = new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 5, depthTest: true, depthWrite: true });
+    }
+);
+
+// Manage Conveyors and Troughs
+let conveyorBelts = [];
+let troughs = [];
+
+function setupConveyors() {
+    // Remove existing conveyors
+    conveyorBelts.forEach(belt => scene.remove(belt));
+    conveyorBelts = [];
+
+    if (currentLevel >= 26 && currentLevel <= 30) {
+        // Two conveyors for levels 26-30
+        const leftBeltGeometry = new THREE.PlaneGeometry(10, 38);
+        const leftBelt = new THREE.Mesh(leftBeltGeometry, beltMaterial);
+        leftBelt.rotation.x = -Math.PI / 2;
+        leftBelt.position.set(-7.5, conveyorHeight, 1);
+        leftBelt.castShadow = true;
+        leftBelt.receiveShadow = true;
+        scene.add(leftBelt);
+        conveyorBelts.push(leftBelt);
+
+        const rightBeltGeometry = new THREE.PlaneGeometry(10, 38);
+        const rightBelt = new THREE.Mesh(rightBeltGeometry, beltMaterial);
+        rightBelt.rotation.x = -Math.PI / 2;
+        rightBelt.position.set(7.5, conveyorHeight, 1);
+        rightBelt.castShadow = true;
+        rightBelt.receiveShadow = true;
+        scene.add(rightBelt);
+        conveyorBelts.push(rightBelt);
+    } else {
+        // Single conveyor for levels 1-25
+        const beltGeometry = new THREE.PlaneGeometry(20, 38);
+        const conveyorBelt = new THREE.Mesh(beltGeometry, beltMaterial);
+        conveyorBelt.rotation.x = -Math.PI / 2;
+        conveyorBelt.position.set(0, conveyorHeight, 1);
+        conveyorBelt.castShadow = true;
+        conveyorBelt.receiveShadow = true;
+        scene.add(conveyorBelt);
+        conveyorBelts.push(conveyorBelt);
+    }
+}
+
+function setupTroughs() {
+    // Remove existing troughs
+    troughs.forEach(trough => scene.remove(trough));
+    troughs = [];
+
+    if (currentLevel >= 26 && currentLevel <= 30) {
+        // Two troughs for levels 26-30
+        const troughGeometry = new THREE.BufferGeometry();
+        const troughVertices = new Float32Array([
+            -5, 0, -2,  5, 0, -2,  5, 0, 2,  -5, 0, 2,
+            -5, 0, 2,  5, 0, 2,  5, 2, 2,  -5, 2, 2,
+            -5, 0, -2,  5, 0, -2,  5, 2, -2,  -5, 2, -2,
+            -5, 0, -2,  -5, 0, 2,  -5, 2, 2,  -5, 2, -2,
+            5, 0, -2,  5, 0, 2,  5, 2, 2,  5, 2, -2
+        ]);
+        const troughIndices = [
+            0, 1, 2,  0, 2, 3,
+            4, 5, 6,  4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15,
+            16, 17, 18, 16, 18, 19
+        ];
+        troughGeometry.setAttribute('position', new THREE.BufferAttribute(troughVertices, 3));
+        troughGeometry.setIndex(troughIndices);
+        troughGeometry.computeVertexNormals();
+
+        const leftTrough = new THREE.Mesh(troughGeometry, troughMaterial);
+        leftTrough.position.set(-7.5, 0.03, -18);
+        leftTrough.castShadow = true;
+        leftTrough.receiveShadow = true;
+        scene.add(leftTrough);
+        troughs.push(leftTrough);
+
+        const rightTrough = new THREE.Mesh(troughGeometry, troughMaterial);
+        rightTrough.position.set(7.5, 0.03, -18);
+        rightTrough.castShadow = true;
+        rightTrough.receiveShadow = true;
+        scene.add(rightTrough);
+        troughs.push(rightTrough);
+    } else {
+        // Single trough for levels 1-25
+        const troughGeometry = new THREE.BufferGeometry();
+        const troughVertices = new Float32Array([
+            -10, 0, -2,  10, 0, -2,  10, 0, 2,  -10, 0, 2,
+            -10, 0, 2,  10, 0, 2,  10, 2, 2,  -10, 2, 2,
+            -10, 0, -2,  10, 0, -2,  10, 2, -2,  -10, 2, -2,
+            -10, 0, -2,  -10, 0, 2,  -10, 2, 2,  -10, 2, -2,
+            10, 0, -2,  10, 0, 2,  10, 2, 2,  10, 2, -2
+        ]);
+        const troughIndices = [
+            0, 1, 2,  0, 2, 3,
+            4, 5, 6,  4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15,
+            16, 17, 18, 16, 18, 19
+        ];
+        troughGeometry.setAttribute('position', new THREE.BufferAttribute(troughVertices, 3));
+        troughGeometry.setIndex(troughIndices);
+        troughGeometry.computeVertexNormals();
+
         const trough = new THREE.Mesh(troughGeometry, troughMaterial);
-        trough.position.set(0, 0.03, -18); // Above conveyor, unchanged
+        trough.position.set(0, 0.03, -18);
         trough.castShadow = true;
         trough.receiveShadow = true;
         scene.add(trough);
+        troughs.push(trough);
     }
-);
+}
 
 // Particles for Sorting Effect
 const particles = [];
@@ -193,7 +262,7 @@ const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
 // Items and Spawning
 const items = [];
 let spawnInterval;
-let lastSpawnZ = 20; // Start at top end (z = 20)
+let lastSpawnZ = 20;
 
 const shapes = [
     { type: 'cube', geometry: new THREE.BoxGeometry(2.25, 2.25, 2.25), color: 0xff0000, needsSorting: true, weight: 0.49, radius: 1.125 },
@@ -206,43 +275,13 @@ const shapes = [
     { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, weight: 0.005, radius: 1, effect: 'freeze', label: 'Freeze' }
 ];
 
-// NEW: Function to get y-offset for items based on shape type
 function getOffset(shape) {
-    if (shape.type === 'cube') return 1.125; // Half height for box
-    if (shape.type === 'triangle') return 0.75; // Approximate for tetrahedron
-    if (shape.type === 'sphere') return 1.5; // Radius for sphere
-    if (shape.type === 'cone') return 0; // Base at y=position.y for cone
-    if (shape.type.startsWith('powerUp')) return 1; // Radius for icosahedron
+    if (shape.type === 'cube') return 1.125;
+    if (shape.type === 'triangle') return 0.75;
+    if (shape.type === 'sphere') return 1.5;
+    if (shape.type === 'cone') return 0;
+    if (shape.type.startsWith('powerUp')) return 1;
 }
-
-// Define Achievements (Updated with 15 new ones)
-const achievements = [
-    { id: "novice_sorter", name: "Novice Sorter", description: "Sort 50 items in total" },
-    { id: "red_master", name: "Red Master", description: "Sort 25 red cubes" },
-    { id: "blue_expert", name: "Blue Expert", description: "Sort 25 blue triangles" },
-    { id: "yellow_pro", name: "Yellow Pro", description: "Sort 25 yellow spheres" },
-    { id: "survivor", name: "Survivor", description: "Complete a level without losing any lives" },
-    { id: "power_up_user", name: "Power-Up User", description: "Use any power-up" },
-    { id: "speed_demon", name: "Speed Demon", description: "Complete a level in under 2 minutes" },
-    { id: "perfectionist", name: "Perfectionist", description: "Sort all items correctly without any mistakes in a level" },
-    { id: "combo_king", name: "Combo King", description: "Sort 10 items in a row without mistakes" },
-    // New Achievements
-    { id: "green_guru", name: "Green Guru", description: "Sort 25 green cones" },
-    { id: "shape_shifter", name: "Shape Shifter", description: "Sort one of each shape in a single level" },
-    { id: "color_coordinator", name: "Color Coordinator", description: "Sort 5 items of the same color in a row" },
-    { id: "power_up_pro", name: "Power-Up Pro", description: "Use 3 different power-ups in a single level" },
-    { id: "quick_sorter", name: "Quick Sorter", description: "Sort 20 items in under 1 minute" },
-    { id: "marathon_sorter", name: "Marathon Sorter", description: "Sort 100 items in a single session" },
-    { id: "level_conqueror", name: "Level Conqueror", description: "Complete level 10" },
-    { id: "master_sorter", name: "Master Sorter", description: "Complete all levels" },
-    { id: "power_up_collector", name: "Power-Up Collector", description: "Collect 10 power-ups in total" },
-    { id: "speed_runner", name: "Speed Runner", description: "Complete a level in under 1 minute" },
-    { id: "endurance_tester", name: "Endurance Tester", description: "Play for 30 minutes in a single session" },
-    { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape" },
-    { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color" },
-    { id: "lucky_sorter", name: "Lucky Sorter", description: "Sort an item correctly on the first try in a level" },
-    { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once" }
-];
 
 function createItem() {
     const availableShapes = (currentLevel < 10) ? shapes.slice(0, 2) : 
@@ -260,15 +299,30 @@ function createItem() {
     }
     const material = new THREE.MeshPhongMaterial({ color: shape.color, shininess: 50 });
     if (shape.effect) {
-        material.emissive.set(shape.color); // Glowing Power-Ups: Set emissive for glow
+        material.emissive.set(shape.color);
     }
     const item = new THREE.Mesh(shape.geometry, material);
     
     let xPos;
     let isOverlapping;
     const maxAttempts = 10;
+
+    let conveyorChoice;
+    if (currentLevel >= 26 && currentLevel <= 30) {
+        conveyorChoice = Math.random() < 0.5 ? 'left' : 'right';
+    } else {
+        conveyorChoice = 'center';
+    }
+
     for (let attempts = 0; attempts < maxAttempts; attempts++) {
-        xPos = Math.random() * 12 - 6;
+        if (conveyorChoice === 'left') {
+            xPos = Math.random() * 10 - 12.5; // x = -12.5 to -2.5
+        } else if (conveyorChoice === 'right') {
+            xPos = Math.random() * 10 + 2.5; // x = 2.5 to 12.5
+        } else {
+            xPos = Math.random() * 12 - 6; // x = -6 to 6
+        }
+
         isOverlapping = items.some(existing => {
             if (existing.userData.isDragging) return false;
             const dx = xPos - existing.position.x;
@@ -280,8 +334,8 @@ function createItem() {
         if (attempts === maxAttempts - 1) return;
     }
     
-    const offset = getOffset(shape); // NEW: Use offset function
-    item.position.set(xPos, conveyorHeight + offset, lastSpawnZ); // CHANGED: Adjusted y to conveyorHeight + offset
+    const offset = getOffset(shape);
+    item.position.set(xPos, conveyorHeight + offset, lastSpawnZ);
     item.castShadow = true;
     item.receiveShadow = true;
     item.userData.needsSorting = shape.needsSorting || false;
@@ -289,7 +343,7 @@ function createItem() {
     item.userData.isPowerUp = shape.effect ? true : false;
     item.userData.type = shape.type;
     if (shape.effect) {
-        const light = new THREE.PointLight(shape.color, 1, 5); // Glowing Power-Ups: Add light
+        const light = new THREE.PointLight(shape.color, 1, 5);
         item.add(light);
     }
     lastSpawnZ -= 6;
@@ -327,18 +381,18 @@ function spawnPowerUp(type) {
             return;
     }
     const material = new THREE.MeshPhongMaterial({ color: shape.color, shininess: 50 });
-    material.emissive.set(shape.color); // Glowing Power-Ups: Set emissive for glow
+    material.emissive.set(shape.color);
     const item = new THREE.Mesh(shape.geometry, material);
     
     let xPos = Math.random() * 12 - 6;
-    const offset = getOffset(shape); // NEW: Use offset for power-ups
-    item.position.set(xPos, conveyorHeight + offset, 20); // CHANGED: y to conveyorHeight + offset
+    const offset = getOffset(shape);
+    item.position.set(xPos, conveyorHeight + offset, 20);
     item.castShadow = true;
     item.receiveShadow = true;
     item.userData.effect = shape.effect;
     item.userData.isPowerUp = true;
     item.userData.type = shape.type;
-    const light = new THREE.PointLight(shape.color, 1, 5); // Glowing Power-Ups: Add light
+    const light = new THREE.PointLight(shape.color, 1, 5);
     item.add(light);
 
     const textDiv = document.createElement('div');
@@ -402,7 +456,7 @@ function startSpawning() {
     }, 1500);
 }
 
-// Sorting Bins with Rough Texture (Open Boxes)
+// Sorting Bins
 const binGeometry = new THREE.BufferGeometry();
 const binVertices = new Float32Array([
     -1.5, 0, -1.5,  1.5, 0, -1.5,  1.5, 0, 1.5,  -1.5, 0, 1.5,
@@ -434,30 +488,39 @@ function setupBins() {
                 { color: 0xff0000, mesh: new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0xff0000, map: texture, shininess: 30, depthTest: true, depthWrite: true })) },
                 { color: 0x0000ff, mesh: new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0x0000ff, map: texture, shininess: 30, depthTest: true, depthWrite: true })) }
             ];
-            // Scale bins by 10%
             bins[0].mesh.scale.set(1.1, 1.1, 1.1);
             bins[1].mesh.scale.set(1.1, 1.1, 1.1);
 
             if (currentLevel >= 10) {
                 const bin3 = new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0xffff00, map: texture, shininess: 30, depthTest: true, depthWrite: true }));
-                bin3.scale.set(1.1, 1.1, 1.1); // Scale by 10%
+                bin3.scale.set(1.1, 1.1, 1.1);
                 bins.push({ color: 0xffff00, mesh: bin3 });
             }
 
-            if (currentLevel >= 16 && currentLevel <= 25) {
+            if (currentLevel >= 16) {
                 const bin4 = new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0x00ff00, map: texture, shininess: 30, depthTest: true, depthWrite: true }));
-                bin4.scale.set(1.1, 1.1, 1.1); // Scale by 10%
+                bin4.scale.set(1.1, 1.1, 1.1);
                 bins.push({ color: 0x00ff00, mesh: bin4 });
             }
 
-            // Set positions with adjusted y to 0.1 (just above floor at y=0)
-            bins[0].mesh.position.set(-12, 0.1, 0); // CHANGED: y from 0.04 to 0.1
-            bins[1].mesh.position.set(12, 0.1, 0); // CHANGED: y from 0.04 to 0.1
-            if (currentLevel >= 10) {
-                bins[2].mesh.position.set(12, 0.1, 4); // CHANGED: y from 0.04 to 0.1
-            }
-            if (currentLevel >= 16 && currentLevel <= 25) {
-                bins[3].mesh.position.set(-12, 0.1, 4); // CHANGED: y from 0.04 to 0.1
+            if (currentLevel >= 26 && currentLevel <= 30) {
+                bins[0].mesh.position.set(-15, 0.1, 0); // Red
+                bins[1].mesh.position.set(-15, 0.1, 4); // Blue
+                if (currentLevel >= 10) {
+                    bins[2].mesh.position.set(15, 0.1, 0); // Yellow
+                }
+                if (currentLevel >= 16) {
+                    bins[3].mesh.position.set(15, 0.1, 4); // Green
+                }
+            } else {
+                bins[0].mesh.position.set(-12, 0.1, 0);
+                bins[1].mesh.position.set(12, 0.1, 0);
+                if (currentLevel >= 10) {
+                    bins[2].mesh.position.set(12, 0.1, 4);
+                }
+                if (currentLevel >= 16 && currentLevel <= 25) {
+                    bins[3].mesh.position.set(-12, 0.1, 4);
+                }
             }
 
             bins.forEach(bin => {
@@ -478,30 +541,39 @@ function setupBins() {
                 { color: 0xff0000, mesh: new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0xff0000, shininess: 30, depthTest: true, depthWrite: true })) },
                 { color: 0x0000ff, mesh: new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0x0000ff, shininess: 30, depthTest: true, depthWrite: true })) }
             ];
-            // Scale bins by 10%
             bins[0].mesh.scale.set(1.1, 1.1, 1.1);
             bins[1].mesh.scale.set(1.1, 1.1, 1.1);
 
             if (currentLevel >= 10) {
                 const bin3 = new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0xffff00, shininess: 30, depthTest: true, depthWrite: true }));
-                bin3.scale.set(1.1, 1.1, 1.1); // Scale by 10%
+                bin3.scale.set(1.1, 1.1, 1.1);
                 bins.push({ color: 0xffff00, mesh: bin3 });
             }
 
-            if (currentLevel >= 16 && currentLevel <= 25) {
+            if (currentLevel >= 16) {
                 const bin4 = new THREE.Mesh(binGeometry, new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 30, depthTest: true, depthWrite: true }));
-                bin4.scale.set(1.1, 1.1, 1.1); // Scale by 10%
+                bin4.scale.set(1.1, 1.1, 1.1);
                 bins.push({ color: 0x00ff00, mesh: bin4 });
             }
 
-            // Set positions with adjusted y to 0.1
-            bins[0].mesh.position.set(-12, 0.1, 0); // CHANGED: y from 0.04 to 0.1
-            bins[1].mesh.position.set(12, 0.1, 0); // CHANGED: y from 0.04 to 0.1
-            if (currentLevel >= 10) {
-                bins[2].mesh.position.set(12, 0.1, 4); // CHANGED: y from 0.04 to 0.1
-            }
-            if (currentLevel >= 16 && currentLevel <= 25) {
-                bins[3].mesh.position.set(-12, 0.1, 4); // CHANGED: y from 0.04 to 0.1
+            if (currentLevel >= 26 && currentLevel <= 30) {
+                bins[0].mesh.position.set(-15, 0.1, 0);
+                bins[1].mesh.position.set(-15, 0.1, 4);
+                if (currentLevel >= 10) {
+                    bins[2].mesh.position.set(15, 0.1, 0);
+                }
+                if (currentLevel >= 16) {
+                    bins[3].mesh.position.set(15, 0.1, 4);
+                }
+            } else {
+                bins[0].mesh.position.set(-12, 0.1, 0);
+                bins[1].mesh.position.set(12, 0.1, 0);
+                if (currentLevel >= 10) {
+                    bins[2].mesh.position.set(12, 0.1, 4);
+                }
+                if (currentLevel >= 16 && currentLevel <= 25) {
+                    bins[3].mesh.position.set(-12, 0.1, 4);
+                }
             }
 
             bins.forEach(bin => {
@@ -522,7 +594,7 @@ function setupBins() {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let selectedItem = null;
-const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -conveyorHeight); // CHANGED: Adjusted to -conveyorHeight (-2.03)
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -conveyorHeight);
 
 // Audio Setup
 const successSound = document.getElementById('sort-success');
@@ -561,7 +633,6 @@ let levelStartTime = null;
 let mistakesMade = false;
 let currentStreak = 0;
 
-// NEW: Additional variables for new achievements
 let sortedShapesThisLevel = new Set();
 let consecutiveColorStreak = 0;
 let lastSortedColor = null;
@@ -601,7 +672,6 @@ let levelUnlocks = JSON.parse(localStorage.getItem('levelUnlocks')) || {
     30: false 
 };
 
-// Load Unlocked Achievements
 let unlockedAchievements = JSON.parse(localStorage.getItem('unlockedAchievements')) || {};
 
 const levelButtons = {
@@ -701,7 +771,6 @@ const levelStartButton = document.getElementById('level-start-button');
 const backToLevelSelectFromStart = document.getElementById('back-to-level-select-from-start');
 const backToMainMenuFromStart = document.getElementById('back-to-main-menu-from-start');
 
-// Apply saved settings and stats on startup
 successSound.muted = isMutedSounds;
 failSound.muted = isMutedSounds;
 levelSuccessSound.muted = isMutedSounds;
@@ -716,7 +785,6 @@ blueSortedDisplay.textContent = blueTrianglesSorted;
 yellowSortedDisplay.textContent = yellowSpheresSorted;
 levelsFailedDisplay.textContent = levelsFailed;
 
-// Event Listeners with Touch Support
 function addButtonListeners(elementId, action) {
     const element = document.getElementById(elementId);
     element.addEventListener('click', (event) => {
@@ -917,7 +985,6 @@ addButtonListeners('close-settings', () => {
     }
 });
 
-// Add correct event listeners for mute checkboxes and volume sliders
 document.getElementById('mute-sounds').addEventListener('change', (e) => {
     isMutedSounds = e.target.checked;
     successSound.muted = isMutedSounds;
@@ -934,7 +1001,7 @@ document.getElementById('mute-music').addEventListener('change', (e) => {
 
 document.getElementById('sounds-volume').addEventListener('input', (e) => {
     soundVolume = parseFloat(e.target.value);
-    console.log('Setting sound volume to', soundVolume); // Added for debugging
+    console.log('Setting sound volume to', soundVolume);
     successSound.volume = soundVolume;
     failSound.volume = soundVolume;
     levelSuccessSound.volume = soundVolume;
@@ -943,16 +1010,14 @@ document.getElementById('sounds-volume').addEventListener('input', (e) => {
 
 document.getElementById('music-volume').addEventListener('input', (e) => {
     musicVolume = parseFloat(e.target.value);
-    console.log('Setting music volume to', musicVolume); // Added for debugging
+    console.log('Setting music volume to', musicVolume);
     gameMusic.volume = musicVolume;
     localStorage.setItem('musicVolume', musicVolume);
 });
 
-// Add reset game data event listener
 addButtonListeners('reset-game-data', () => {
     console.log('Reset game data button clicked/touched');
     if (confirm('Are you sure you want to reset all game data? This will reset level progress, stats, and achievements.')) {
-        // Reset level unlocks
         levelUnlocks = {
             2: false, 3: false, 4: false, 5: false,
             6: false, 7: false, 8: false, 9: false,
@@ -965,7 +1030,6 @@ addButtonListeners('reset-game-data', () => {
         };
         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
 
-        // Reset stats
         totalItemsSorted = 0;
         redCubesSorted = 0;
         blueTrianglesSorted = 0;
@@ -979,11 +1043,9 @@ addButtonListeners('reset-game-data', () => {
         localStorage.setItem('greenConesSorted', greenConesSorted);
         localStorage.setItem('levelsFailed', levelsFailed);
 
-        // Reset achievements
         unlockedAchievements = {};
         localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
 
-        // Reset new stats
         shapeCounts = { cube: 0, triangle: 0, sphere: 0, cone: 0 };
         colorCounts = { 0xff0000: 0, 0x0000ff: 0, 0xffff00: 0, 0x00ff00: 0 };
         totalPowerUpsCollected = 0;
@@ -999,7 +1061,6 @@ addButtonListeners('reset-game-data', () => {
         localStorage.setItem('totalPowerUpsCollected', 0);
         localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
 
-        // Update UI
         for (let i = 2; i <= 30; i++) {
             levelButtons[i].textContent = `Level ${i} (Locked)`;
             levelButtons[i].disabled = true;
@@ -1011,7 +1072,6 @@ addButtonListeners('reset-game-data', () => {
         levelsFailedDisplay.textContent = levelsFailed;
         updateAchievementsList();
 
-        // Reset topSortedPerLevel in memory
         topSortedPerLevel = {
             1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
             6: 0, 7: 0, 8: 0, 9: 0, 10: 0,
@@ -1169,6 +1229,33 @@ addButtonListeners('restart-button', () => {
 });
 
 // Achievement Functions
+const achievements = [
+    { id: "novice_sorter", name: "Novice Sorter", description: "Sort 50 items in total" },
+    { id: "red_master", name: "Red Master", description: "Sort 25 red cubes" },
+    { id: "blue_expert", name: "Blue Expert", description: "Sort 25 blue triangles" },
+    { id: "yellow_pro", name: "Yellow Pro", description: "Sort 25 yellow spheres" },
+    { id: "survivor", name: "Survivor", description: "Complete a level without losing any lives" },
+    { id: "power_up_user", name: "Power-Up User", description: "Use any power-up" },
+    { id: "speed_demon", name: "Speed Demon", description: "Complete a level in under 2 minutes" },
+    { id: "perfectionist", name: "Perfectionist", description: "Sort all items correctly without any mistakes in a level" },
+    { id: "combo_king", name: "Combo King", description: "Sort 10 items in a row without mistakes" },
+    { id: "green_guru", name: "Green Guru", description: "Sort 25 green cones" },
+    { id: "shape_shifter", name: "Shape Shifter", description: "Sort one of each shape in a single level" },
+    { id: "color_coordinator", name: "Color Coordinator", description: "Sort 5 items of the same color in a row" },
+    { id: "power_up_pro", name: "Power-Up Pro", description: "Use 3 different power-ups in a single level" },
+    { id: "quick_sorter", name: "Quick Sorter", description: "Sort 20 items in under 1 minute" },
+    { id: "marathon_sorter", name: "Marathon Sorter", description: "Sort 100 items in a single session" },
+    { id: "level_conqueror", name: "Level Conqueror", description: "Complete level 10" },
+    { id: "master_sorter", name: "Master Sorter", description: "Complete all levels" },
+    { id: "power_up_collector", name: "Power-Up Collector", description: "Collect 10 power-ups in total" },
+    { id: "speed_runner", name: "Speed Runner", description: "Complete a level in under 1 minute" },
+    { id: "endurance_tester", name: "Endurance Tester", description: "Play for 30 minutes in a single session" },
+    { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape" },
+    { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color" },
+    { id: "lucky_sorter", name: "Lucky Sorter", description: "Sort an item correctly on the first try in a level" },
+    { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once" }
+];
+
 function unlockAchievement(id) {
     if (!unlockedAchievements[id]) {
         unlockedAchievements[id] = true;
@@ -1181,21 +1268,11 @@ function unlockAchievement(id) {
 }
 
 function checkSortingAchievements() {
-    if (totalItemsSorted >= 50) {
-        unlockAchievement("novice_sorter");
-    }
-    if (redCubesSorted >= 25) {
-        unlockAchievement("red_master");
-    }
-    if (blueTrianglesSorted >= 25) {
-        unlockAchievement("blue_expert");
-    }
-    if (yellowSpheresSorted >= 25) {
-        unlockAchievement("yellow_pro");
-    }
-    if (greenConesSorted >= 25) {
-        unlockAchievement("green_guru");
-    }
+    if (totalItemsSorted >= 50) unlockAchievement("novice_sorter");
+    if (redCubesSorted >= 25) unlockAchievement("red_master");
+    if (blueTrianglesSorted >= 25) unlockAchievement("blue_expert");
+    if (yellowSpheresSorted >= 25) unlockAchievement("yellow_pro");
+    if (greenConesSorted >= 25) unlockAchievement("green_guru");
 }
 
 function updateAchievementsList() {
@@ -1214,7 +1291,6 @@ function updateAchievementsList() {
     }
 }
 
-// Particle Effects Function
 function createParticles(position, color) {
     const particleMaterial = new THREE.MeshBasicMaterial({ color: color });
     for (let i = 0; i < 5; i++) {
@@ -1228,7 +1304,6 @@ function createParticles(position, color) {
     }
 }
 
-// Game Logic Functions
 function resetGameState() {
     lives = 3;
     livesText.textContent = `Lives: ${lives}`;
@@ -1244,7 +1319,6 @@ function resetGameState() {
     levelStartTime = Date.now();
     mistakesMade = false;
     currentStreak = 0;
-    // NEW: Reset per-level stats for achievements
     sortedShapesThisLevel.clear();
     consecutiveColorStreak = 0;
     lastSortedColor = null;
@@ -1269,6 +1343,9 @@ function startGame(level) {
                         level === 16 ? 0.067 : level === 17 ? 0.070 : level === 18 ? 0.073 : level === 19 ? 0.076 : level === 20 ? 0.079 :
                         level === 21 ? 0.082 : level === 22 ? 0.085 : level === 23 ? 0.088 : level === 24 ? 0.091 : level === 25 ? 0.094 :
                         level === 26 ? 0.097 : level === 27 ? 0.100 : level === 28 ? 0.103 : level === 29 ? 0.106 : level === 30 ? 0.109 : 0.02;
+    if (currentLevel >= 26 && currentLevel <= 30) {
+        baseConveyorSpeed *= 0.5; // Reduce speed by 50% for levels 26-30
+    }
     conveyorSpeed = baseConveyorSpeed;
     neededTotalDisplay.textContent = itemsNeeded;
     completedLevelDisplay.textContent = currentLevel;
@@ -1276,6 +1353,12 @@ function startGame(level) {
     endLevelButton.style.display = 'none';
     cleanupBins();
     setupBins();
+    conveyorBelts.forEach(belt => scene.remove(belt));
+    troughs.forEach(trough => scene.remove(trough));
+    conveyorBelts = [];
+    troughs = [];
+    setupConveyors();
+    setupTroughs();
     restartGame();
 }
 
@@ -1335,7 +1418,7 @@ function cleanupGame() {
         scene.remove(item);
     });
     items.length = 0;
-    particles.forEach(particle => scene.remove(particle)); // Particle Effects: Cleanup
+    particles.forEach(particle => scene.remove(particle));
     particles.length = 0;
 }
 
@@ -1349,7 +1432,6 @@ function restartGame() {
     }
 }
 
-// Mouse and Touch Event Handlers
 function getEventPosition(event) {
     let x, y;
     if (event.type.startsWith('mouse')) {
@@ -1471,16 +1553,9 @@ function onEnd(event) {
                         localStorage.setItem('totalPowerUpsCollected', totalPowerUpsCollected);
                         localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
                         
-                        // NEW: Check power-up related achievements
-                        if (totalPowerUpsCollected >= 10) {
-                            unlockAchievement("power_up_collector");
-                        }
-                        if (powerUpsUsed.slow && powerUpsUsed.speed && powerUpsUsed.extraLife && powerUpsUsed.freeze) {
-                            unlockAchievement("power_up_master");
-                        }
-                        if (powerUpsUsedThisLevel.size >= 3) {
-                            unlockAchievement("power_up_pro");
-                        }
+                        if (totalPowerUpsCollected >= 10) unlockAchievement("power_up_collector");
+                        if (powerUpsUsed.slow && powerUpsUsed.speed && powerUpsUsed.extraLife && powerUpsUsed.freeze) unlockAchievement("power_up_master");
+                        if (powerUpsUsedThisLevel.size >= 3) unlockAchievement("power_up_pro");
 
                         updatePowerUpStatus();
                         animatePowerUp(sortedItem, 'shrink', () => {
@@ -1495,15 +1570,13 @@ function onEnd(event) {
                                 successSound.play().catch(e => console.log('Error playing success sound:', e));
                             }
                             currentStreak++;
-                            if (currentStreak >= 10) {
-                                unlockAchievement("combo_king");
-                            }
+                            if (currentStreak >= 10) unlockAchievement("combo_king");
                         });
                         unlockAchievement("power_up_user");
                     } else if (sortedItem.userData.needsSorting) {
                         if (bin.color === itemColor) {
                             animatePowerUp(sortedItem, 'shrink', () => {
-                                createParticles(sortedItem.position, sortedItem.material.color); // Particle Effects: Trigger particles
+                                createParticles(sortedItem.position, sortedItem.material.color);
                                 scene.remove(sortedItem);
                                 const index = items.indexOf(sortedItem);
                                 if (index !== -1) items.splice(index, 1);
@@ -1551,18 +1624,13 @@ function onEnd(event) {
                                     successSound.play().catch(e => console.log('Error playing success sound:', e));
                                 }
                                 currentStreak++;
-                                if (currentStreak >= 10) {
-                                    unlockAchievement("combo_king");
-                                }
+                                if (currentStreak >= 10) unlockAchievement("combo_king");
 
-                                // NEW: Update stats and check sorting-related achievements
                                 sortedShapesThisLevel.add(sortedItem.userData.type);
                                 const currentColor = sortedItem.material.color.getHex();
                                 if (currentColor === lastSortedColor) {
                                     consecutiveColorStreak++;
-                                    if (consecutiveColorStreak >= 5) {
-                                        unlockAchievement("color_coordinator");
-                                    }
+                                    if (consecutiveColorStreak >= 5) unlockAchievement("color_coordinator");
                                 } else {
                                     consecutiveColorStreak = 1;
                                     lastSortedColor = currentColor;
@@ -1571,49 +1639,31 @@ function onEnd(event) {
                                     firstSortInLevel = false;
                                     unlockAchievement("lucky_sorter");
                                 }
-                                if (sortedShapesThisLevel.size >= 4) { // Assumes 4 shapes: cube, triangle, sphere, cone
-                                    unlockAchievement("shape_shifter");
-                                }
-                                const timeElapsed = (Date.now() - levelStartTime) / 1000; // in seconds
-                                if (levelItemsSorted >= 20 && timeElapsed < 60) {
-                                    unlockAchievement("quick_sorter");
-                                }
-                                if (sessionItemsSorted >= 100) {
-                                    unlockAchievement("marathon_sorter");
-                                }
+                                if (sortedShapesThisLevel.size >= 4) unlockAchievement("shape_shifter");
+                                const timeElapsed = (Date.now() - levelStartTime) / 1000;
+                                if (levelItemsSorted >= 20 && timeElapsed < 60) unlockAchievement("quick_sorter");
+                                if (sessionItemsSorted >= 100) unlockAchievement("marathon_sorter");
                                 for (const shape in shapeCounts) {
                                     if (shapeCounts[shape] >= 50) {
                                         unlockAchievement("shape_specialist");
-                                        break; // Unlock once per sort to avoid multiple triggers
+                                        break;
                                     }
                                 }
                                 for (const color in colorCounts) {
                                     if (colorCounts[color] >= 50) {
                                         unlockAchievement("color_specialist");
-                                        break; // Unlock once per sort to avoid multiple triggers
+                                        break;
                                     }
                                 }
 
                                 if (sortCount >= itemsNeeded) {
-                                    const timeElapsed = (Date.now() - levelStartTime) / 1000; // in seconds
-                                    if (timeElapsed < 60) {
-                                        unlockAchievement("speed_runner");
-                                    }
-                                    if (timeElapsed < 120) {
-                                        unlockAchievement("speed_demon");
-                                    }
-                                    if (!mistakesMade) {
-                                        unlockAchievement("perfectionist");
-                                    }
-                                    if (lives === 3) {
-                                        unlockAchievement("survivor");
-                                    }
-                                    if (currentLevel === 10) {
-                                        unlockAchievement("level_conqueror");
-                                    }
-                                    if (currentLevel === 30) {
-                                        unlockAchievement("master_sorter");
-                                    }
+                                    const timeElapsed = (Date.now() - levelStartTime) / 1000;
+                                    if (timeElapsed < 60) unlockAchievement("speed_runner");
+                                    if (timeElapsed < 120) unlockAchievement("speed_demon");
+                                    if (!mistakesMade) unlockAchievement("perfectionist");
+                                    if (lives === 3) unlockAchievement("survivor");
+                                    if (currentLevel === 10) unlockAchievement("level_conqueror");
+                                    if (currentLevel === 30) unlockAchievement("master_sorter");
                                     if (currentLevel < 30) {
                                         levelUnlocks[currentLevel + 1] = true;
                                         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
@@ -1653,7 +1703,6 @@ function onEnd(event) {
 
         if (!sorted) {
             if (Math.abs(selectedItem.position.x) > 10) {
-                // Remove item and lose a life if dropped off the conveyor sides
                 if (selectedItem.userData.textDiv) {
                     document.body.removeChild(selectedItem.userData.textDiv);
                 }
@@ -1678,7 +1727,6 @@ function onEnd(event) {
     }
 }
 
-// Add event listeners for mouse and touch
 renderer.domElement.addEventListener('mousedown', onStart);
 renderer.domElement.addEventListener('touchstart', onStart, { passive: false });
 renderer.domElement.addEventListener('mousemove', onMove);
@@ -1735,7 +1783,6 @@ function animatePowerUp(item, type, callback) {
     requestAnimationFrame(animate);
 }
 
-// Animation Loop
 let lastTime = 0;
 let textureOffset = 0;
 function animate(timestamp) {
@@ -1745,7 +1792,6 @@ function animate(timestamp) {
     lastTime = timestamp;
 
     if (!isPaused && beltMaterial && beltMaterial.map) {
-        // Set conveyor speed based on active power-ups
         conveyorSpeed = baseConveyorSpeed;
         if (activePowerUps.length > 0) {
             const hasFreeze = activePowerUps.some(p => p.effect === 'freeze');
@@ -1770,7 +1816,9 @@ function animate(timestamp) {
         }
         
         textureOffset -= conveyorSpeed;
-        beltMaterial.map.offset.y = textureOffset % 1;
+        conveyorBelts.forEach(belt => {
+            belt.material.map.offset.y = textureOffset % 1;
+        });
 
         const toRemove = [];
         items.forEach((item, index) => {
@@ -1800,7 +1848,6 @@ function animate(timestamp) {
             }
         });
 
-        // Particle Effects: Update particles
         const particleRemove = [];
         particles.forEach((particle, index) => {
             particle.position.add(particle.userData.velocity);
@@ -1815,25 +1862,20 @@ function animate(timestamp) {
             particles.splice(index, 1);
         });
 
-        // NEW: Check for endurance_tester achievement
-        const sessionTime = (Date.now() - sessionStartTime) / 1000 / 60; // in minutes
-        if (sessionTime >= 30) {
-            unlockAchievement("endurance_tester");
-        }
+        const sessionTime = (Date.now() - sessionStartTime) / 1000 / 60;
+        if (sessionTime >= 30) unlockAchievement("endurance_tester");
     }
 
     renderer.render(scene, camera);
 }
 requestAnimationFrame(animate);
 
-// Window Resize Handling
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Shadow and Renderer Settings
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 directionalLight.shadow.mapSize.width = 512;
@@ -1843,5 +1885,4 @@ directionalLight.shadow.camera.far = 50;
 renderer.setClearColor(0x000000, 0);
 renderer.setPixelRatio(window.devicePixelRatio);
 
-// Initial bin setup
 setupBins();
