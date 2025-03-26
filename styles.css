@@ -11,7 +11,7 @@ body {
     touch-action: none; /* NEW: Prevents default touch behaviors */
 }
 
-#start-screen, #pause-screen, #settings-screen, #level-select-screen, #level-select-page-2, #game-over-screen, #level-complete-screen, #instructions-screen, #stats-screen, #dev-tools-bubble, #power-up-menu, #level-start-screen, #power-ups-screen {
+#start-screen, #pause-screen, #settings-screen, #level-select-screen, #level-select-page-2, #level-select-page-3, #game-over-screen, #level-complete-screen, #instructions-screen, #stats-screen, #achievements-screen, #dev-tools-bubble, #power-up-menu, #level-start-screen, #power-ups-screen {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -44,7 +44,7 @@ body {
     text-shadow: 0 0 5px #28a745, 0 0 10px #28a745; /* Glow effect */
 }
 
-#pause-screen h2, #settings-screen h2, #level-select-screen h2, #level-select-page-2 h2, #game-over-screen h2, #level-complete-screen h2, #instructions-screen h2, #stats-screen h2, #dev-tools-bubble h3, #power-up-menu h3, #level-start-screen h2 {
+#pause-screen h2, #settings-screen h2, #level-select-screen h2, #level-select-page-2 h2, #level-select-page-3 h2, #game-over-screen h2, #level-complete-screen h2, #instructions-screen h2, #stats-screen h2, #dev-tools-bubble h3, #power-up-menu h3, #level-start-screen h2 {
     margin: 0 0 25px;
     font-family: 'Orbitron', sans-serif;
     font-size: 36px;
@@ -58,7 +58,7 @@ body {
     text-shadow: 0 0 3px #ffffff;
 }
 
-#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #dev-tools-bubble button, #power-up-menu button, #level-start-screen button {
+#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #level-select-page-3 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #dev-tools-bubble button, #power-up-menu button, #level-start-screen button {
     display: block;
     margin: 15px auto;
     padding: 12px 25px;
@@ -72,12 +72,12 @@ body {
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
-#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover {
+#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #level-select-page-3 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover {
     background: linear-gradient(135deg, #218838, #1e7e34);
     transform: scale(1.05); /* Slight enlargement */
 }
 
-#start-screen p, #pause-screen p, #settings-screen p, #level-select-screen p, #level-select-page-2 p, #game-over-screen p, #level-complete-screen p, #instructions-screen p, #stats-screen p, #dev-tools-bubble p, #power-up-menu p {
+#start-screen p, #pause-screen p, #settings-screen p, #level-select-screen p, #level-select-page-2 p, #level-select-page-3 p, #game-over-screen p, #level-complete-screen p, #instructions-screen p, #stats-screen p, #dev-tools-bubble p, #power-up-menu p {
     margin: 10px 0;
     font-size: 18px;
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
@@ -102,11 +102,11 @@ body {
     width: 150px;
 }
 
-#level-select-screen, #level-select-page-2 {
+#level-select-screen, #level-select-page-2, #level-select-page-3 {
     transform: translate(-50%, -50%) scale(0.75);
 }
 
-#level-columns, #level-columns-page-2 {
+#level-columns, #level-columns-page-2, #level-columns-page-3 {
     display: flex;
     justify-content: center;
     gap: 20px;
@@ -126,14 +126,14 @@ body {
     background: linear-gradient(135deg, #28a745, #218838);
 }
 
-#level-select-buttons, #level-select-buttons-page-2, #power-up-menu-buttons {
+#level-select-buttons, #level-select-buttons-page-2, #level-select-buttons-page-3, #power-up-menu-buttons {
     margin-top: 20px;
     display: flex;
     justify-content: center;
     gap: 20px;
 }
 
-#level-select-screen button:disabled, #level-select-page-2 button:disabled, #power-up-menu button:disabled {
+#level-select-screen button:disabled, #level-select-page-2 button:disabled, #level-select-page-3 button:disabled, #power-up-menu button:disabled {
     background: linear-gradient(135deg, #666666, #4d4d4d);
     cursor: not-allowed;
 }

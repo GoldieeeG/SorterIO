@@ -15,7 +15,7 @@
     <div id="game-container"></div>
     <div id="start-screen">
         <h1>Conveyor Sort</h1>
-        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#added8ddddc2dfd9edc8d5ccc0ddc1c883cec2c0"><span class="__cf_email__" data-cfemail="192a2c2929362b2d193c21383429353c773a3634">[email&#160;protected]</span></a></p>
+        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#d8abada8a8b7aaac98bda0b9b5a8b4bdf6bbb7b5"><span class="__cf_email__" data-cfemail="d5a6a0a5a5baa7a195b0adb4b8a5b9b0fbb6bab8">[email&#160;protected]</span></a></p>
         <div class="columns">
             <div class="column-left">
                 <button id="start-button">Start</button>
@@ -26,6 +26,7 @@
                 <button id="power-ups-button">Power-Ups</button>
                 <button id="settings-button-start">Settings</button>
                 <button id="stats-button">Stats</button>
+                <button id="achievements-button">Achievements</button>
             </div>
         </div>
         <div class="ad-container" style="width: 300px; height: 250px; margin: 20px auto;">
@@ -36,7 +37,7 @@
                  data-ad-format="auto"></ins>
         </div>
         <p>Created by Goldie 2025</p>
-        <p id="version-text">Alpha v0.40</p>
+        <p id="version-text">Alpha v0.37</p>
     </div>
     <div id="stats-screen" style="display: none;">
         <h2>Player Stats</h2>
@@ -45,9 +46,12 @@
         <p>Blue Triangles Sorted: <span id="blue-sorted">Coming Soon</span></p>
         <p>Yellow Spheres Sorted: <span id="yellow-sorted">Coming Soon</span></p>
         <p>Levels Failed: <span id="levels-failed">0</span></p>
+        <button id="back-to-start-from-stats">Back</button>
+    </div>
+    <div id="achievements-screen" style="display: none;">
         <h2>Achievements</h2>
         <ul id="achievements-list"></ul>
-        <button id="back-to-start-from-stats">Back</button>
+        <button id="back-to-start-from-achievements">Back</button>
     </div>
     <div id="level-select-screen" style="display: none;">
         <h2>Level Select</h2>
@@ -106,7 +110,38 @@
         </div>
         <div id="level-select-buttons-page-2">
             <button id="prev-page-button">Previous Page</button>
+            <button id="next-page-button-page-2">Next Page</button>
             <button id="back-to-start-page-2">Back</button>
+        </div>
+    </div>
+    <div id="level-select-page-3" style="display: none;">
+        <h2>Level Select (Page 3)</h2>
+        <div id="level-columns-page-3">
+            <div class="level-column">
+                <button class="level-button" id="level-31-button" disabled>Level 31 (Coming Soon)</button>
+                <button class="level-button" id="level-32-button" disabled>Level 32 (Coming Soon)</button>
+                <button class="level-button" id="level-33-button" disabled>Level 33 (Coming Soon)</button>
+                <button class="level-button" id="level-34-button" disabled>Level 34 (Coming Soon)</button>
+                <button class="level-button" id="level-35-button" disabled>Level 35 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-36-button" disabled>Level 36 (Coming Soon)</button>
+                <button class="level-button" id="level-37-button" disabled>Level 37 (Coming Soon)</button>
+                <button class="level-button" id="level-38-button" disabled>Level 38 (Coming Soon)</button>
+                <button class="level-button" id="level-39-button" disabled>Level 39 (Coming Soon)</button>
+                <button class="level-button" id="level-40-button" disabled>Level 40 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-41-button" disabled>Level 41 (Coming Soon)</button>
+                <button class="level-button" id="level-42-button" disabled>Level 42 (Coming Soon)</button>
+                <button class="level-button" id="level-43-button" disabled>Level 43 (Coming Soon)</button>
+                <button class="level-button" id="level-44-button" disabled>Level 44 (Coming Soon)</button>
+                <button class="level-button" id="level-45-button" disabled>Level 45 (Coming Soon)</button>
+            </div>
+        </div>
+        <div id="level-select-buttons-page-3">
+            <button id="prev-page-button-page-3">Previous Page</button>
+            <button id="back-to-start-page-3">Back</button>
         </div>
     </div>
     <div id="level-start-screen" style="display: none;">
@@ -134,7 +169,7 @@
             Top Sorted: <span id="top-sorted-count">0</span>
         </div>
         <div id="power-up-status" style="display: none;"></div>
-        <div id="version-container">Alpha v0.40</div>
+        <div id="version-container">Alpha v0.37</div>
         <button id="restart-button">Restart Game</button>
         <button id="pause-resume-button">Pause</button>
         <button id="end-level-button" style="display: none;">Complete Level</button>
@@ -151,7 +186,7 @@
                  data-ad-slot="4400265656"
                  data-ad-format="auto"></ins>
         </div>
-        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#10636560607f6264507568717d607c753e737f7d"><span class="__cf_email__" data-cfemail="42317772726d707642677a636f726e672c616d6f">[email&#160;protected]</span></a></p>
+        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#23601613130c111723061b020e130f064d000c0e"><span class="__cf_email__" data-cfemail="c3f0f6f3f3ecf1f7c3e6fbe2eef3efe6ade0ecee">[email&#160;protected]</span></a></p>
     </div>
     <div id="game-over-screen" style="display: none;">
         <h2>Level Failed</h2>
@@ -237,5 +272,5 @@
       (adsbygoogle = window.adsbygoogle || []).push({});
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92531a664d6144e4',t:'MTc0Mjc4NzE2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92531a664d6144e4',t:'MTc0Mjc4NzE2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'925a7390a9bac25a',t:'MTc0Mjg2NDIxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'925a85e149237ba5',t:'MTc0Mjg2NDk2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

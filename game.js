@@ -746,11 +746,13 @@ const powerUpStatus = document.getElementById('power-up-status');
 const startScreen = document.getElementById('start-screen');
 const levelSelectScreen = document.getElementById('level-select-screen');
 const levelSelectPage2 = document.getElementById('level-select-page-2');
+const levelSelectPage3 = document.getElementById('level-select-page-3');
 const gameUI = document.getElementById('game-ui');
 const pauseScreen = document.getElementById('pause-screen');
 const settingsScreen = document.getElementById('settings-screen');
 const instructionsScreen = document.getElementById('instructions-screen');
 const statsScreen = document.getElementById('stats-screen');
+const achievementsScreen = document.getElementById('achievements-screen');
 const devToolsButton = document.getElementById('dev-tools-button');
 const devToolsBubble = document.getElementById('dev-tools-bubble');
 const powerUpMenu = document.getElementById('power-up-menu');
@@ -853,9 +855,27 @@ addButtonListeners('prev-page-button', () => {
     levelSelectScreen.style.display = 'block';
 });
 
+addButtonListeners('next-page-button-page-2', () => {
+    console.log('Next page from page 2 clicked/touched');
+    levelSelectPage2.style.display = 'none';
+    levelSelectPage3.style.display = 'block';
+});
+
+addButtonListeners('prev-page-button-page-3', () => {
+    console.log('Previous page from page 3 clicked/touched');
+    levelSelectPage3.style.display = 'none';
+    levelSelectPage2.style.display = 'block';
+});
+
 addButtonListeners('back-to-start-page-2', () => {
     console.log('Back to start from page 2 clicked/touched');
     levelSelectPage2.style.display = 'none';
+    startScreen.style.display = 'block';
+});
+
+addButtonListeners('back-to-start-page-3', () => {
+    console.log('Back to start from page 3 clicked/touched');
+    levelSelectPage3.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
@@ -892,12 +912,24 @@ addButtonListeners('stats-button', () => {
     blueSortedDisplay.textContent = blueTrianglesSorted;
     yellowSortedDisplay.textContent = yellowSpheresSorted;
     levelsFailedDisplay.textContent = levelsFailed;
+});
+
+addButtonListeners('achievements-button', () => {
+    console.log('Achievements button clicked/touched');
+    startScreen.style.display = 'none';
+    achievementsScreen.style.display = 'block';
     updateAchievementsList();
 });
 
 addButtonListeners('back-to-start-from-stats', () => {
     console.log('Back to start from stats clicked/touched');
     statsScreen.style.display = 'none';
+    startScreen.style.display = 'block';
+});
+
+addButtonListeners('back-to-start-from-achievements', () => {
+    console.log('Back to start from achievements clicked/touched');
+    achievementsScreen.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
