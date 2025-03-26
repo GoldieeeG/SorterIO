@@ -469,11 +469,11 @@ const binVertices = new Float32Array([
     1.5, 0, -1.5,  1.5, 0, 1.5,  1.5, 1.5, 1.5,  1.5, 1.5, -1.5
 ]);
 const binIndices = [
-    0, 1, 2,  0, 2, 3,
-    4, 5, 6,  4, 6, 7,
-    8, 9, 10, 8, 10, 11,
-    12, 13, 14, 12, 14, 15,
-    16, 17, 18, 16, 18, 19
+    0, 1, 2,  0, 2, 3,  // bottom
+    4, 5, 6,  4, 6, 7,  // front
+    10, 9, 8,  11, 10, 8,  // back (corrected)
+    12, 13, 14, 12, 14, 15,  // left
+    18, 17, 16, 19, 18, 16  // right (corrected)
 ];
 binGeometry.setAttribute('position', new THREE.BufferAttribute(binVertices, 3));
 binGeometry.setIndex(binIndices);
@@ -530,10 +530,21 @@ function setupBins() {
                 bin.mesh.castShadow = true;
                 bin.mesh.receiveShadow = true;
                 scene.add(bin.mesh);
-                const outline = new THREE.Mesh(binGeometry, new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true }));
-                outline.scale.set(1.1, 1.1, 1.1);
-                bin.mesh.add(outline);
-                outline.visible = false;
+                
+                // Permanent outline
+                const permanentOutlineMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+                const permanentOutlineMesh = new THREE.Mesh(binGeometry, permanentOutlineMaterial);
+                permanentOutlineMesh.scale.multiplyScalar(1.05);
+                bin.mesh.add(permanentOutlineMesh);
+                bin.permanentOutline = permanentOutlineMesh;
+                
+                // Highlight outline
+                const highlightOutlineMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+                const highlightOutlineMesh = new THREE.Mesh(binGeometry, highlightOutlineMaterial);
+                highlightOutlineMesh.scale.set(1.1, 1.1, 1.1);
+                bin.mesh.add(highlightOutlineMesh);
+                bin.highlightOutline = highlightOutlineMesh;
+                bin.highlightOutline.visible = false;
             });
             window.bins = bins;
         },
@@ -583,10 +594,21 @@ function setupBins() {
                 bin.mesh.castShadow = true;
                 bin.mesh.receiveShadow = true;
                 scene.add(bin.mesh);
-                const outline = new THREE.Mesh(binGeometry, new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true }));
-                outline.scale.set(1.1, 1.1, 1.1);
-                bin.mesh.add(outline);
-                outline.visible = false;
+                
+                // Permanent outline
+                const permanentOutlineMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+                const permanentOutlineMesh = new THREE.Mesh(binGeometry, permanentOutlineMaterial);
+                permanentOutlineMesh.scale.multiplyScalar(1.05);
+                bin.mesh.add(permanentOutlineMesh);
+                bin.permanentOutline = permanentOutlineMesh;
+                
+                // Highlight outline
+                const highlightOutlineMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+                const highlightOutlineMesh = new THREE.Mesh(binGeometry, highlightOutlineMaterial);
+                highlightOutlineMesh.scale.set(1.1, 1.1, 1.1);
+                bin.mesh.add(highlightOutlineMesh);
+                bin.highlightOutline = highlightOutlineMesh;
+                bin.highlightOutline.visible = false;
             });
             window.bins = bins;
         }
@@ -1265,31 +1287,33 @@ addButtonListeners('restart-button', () => {
 
 // Achievement Functions
 const achievements = [
-    { id: "novice_sorter", name: "Novice Sorter", description: "Sort 50 items in total" },
-    { id: "red_master", name: "Red Master", description: "Sort 25 red cubes" },
-    { id: "blue_expert", name: "Blue Expert", description: "Sort 25 blue triangles" },
-    { id: "yellow_pro", name: "Yellow Pro", description: "Sort 25 yellow spheres" },
-    { id: "survivor", name: "Survivor", description: "Complete a level without losing any lives" },
-    { id: "power_up_user", name: "Power-Up User", description: "Use any power-up" },
-    { id: "speed_demon", name: "Speed Demon", description: "Complete a level in under 2 minutes" },
-    { id: "perfectionist", name: "Perfectionist", description: "Sort all items correctly without any mistakes in a level" },
-    { id: "combo_king", name: "Combo King", description: "Sort 10 items in a row without mistakes" },
-    { id: "green_guru", name: "Green Guru", description: "Sort 25 green cones" },
-    { id: "shape_shifter", name: "Shape Shifter", description: "Sort one of each shape in a single level" },
-    { id: "color_coordinator", name: "Color Coordinator", description: "Sort 5 items of the same color in a row" },
-    { id: "power_up_pro", name: "Power-Up Pro", description: "Use 3 different power-ups in a single level" },
-    { id: "quick_sorter", name: "Quick Sorter", description: "Sort 20 items in under 1 minute" },
-    { id: "marathon_sorter", name: "Marathon Sorter", description: "Sort 100 items in a single session" },
-    { id: "level_conqueror", name: "Level Conqueror", description: "Complete level 10" },
-    { id: "master_sorter", name: "Master Sorter", description: "Complete all levels" },
-    { id: "power_up_collector", name: "Power-Up Collector", description: "Collect 10 power-ups in total" },
-    { id: "speed_runner", name: "Speed Runner", description: "Complete a level in under 1 minute" },
-    { id: "endurance_tester", name: "Endurance Tester", description: "Play for 30 minutes in a single session" },
-    { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape" },
-    { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color" },
-    { id: "lucky_sorter", name: "Lucky Sorter", description: "Sort an item correctly on the first try in a level" },
-    { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once" }
+    { id: "novice_sorter", name: "Novice Sorter", description: "Sort 50 items in total", difficulty: "easy" },
+    { id: "red_master", name: "Red Master", description: "Sort 25 red cubes", difficulty: "medium" },
+    { id: "blue_expert", name: "Blue Expert", description: "Sort 25 blue triangles", difficulty: "medium" },
+    { id: "yellow_pro", name: "Yellow Pro", description: "Sort 25 yellow spheres", difficulty: "medium" },
+    { id: "survivor", name: "Survivor", description: "Complete a level without losing any lives", difficulty: "medium" },
+    { id: "power_up_user", name: "Power-Up User", description: "Use any power-up", difficulty: "easy" },
+    { id: "speed_demon", name: "Speed Demon", description: "Complete a level in under 2 minutes", difficulty: "medium" },
+    { id: "perfectionist", name: "Perfectionist", description: "Sort all items correctly without any mistakes in a level", difficulty: "medium" },
+    { id: "combo_king", name: "Combo King", description: "Sort 10 items in a row without mistakes", difficulty: "medium" },
+    { id: "green_guru", name: "Green Guru", description: "Sort 25 green cones", difficulty: "medium" },
+    { id: "shape_shifter", name: "Shape Shifter", description: "Sort one of each shape in a single level", difficulty: "medium" },
+    { id: "color_coordinator", name: "Color Coordinator", description: "Sort 5 items of the same color in a row", difficulty: "medium" },
+    { id: "power_up_pro", name: "Power-Up Pro", description: "Use 3 different power-ups in a single level", difficulty: "hard" },
+    { id: "quick_sorter", name: "Quick Sorter", description: "Sort 20 items in under 1 minute", difficulty: "medium" },
+    { id: "marathon_sorter", name: "Marathon Sorter", description: "Sort 100 items in a single session", difficulty: "medium" },
+    { id: "level_conqueror", name: "Level Conqueror", description: "Complete level 10", difficulty: "medium" },
+    { id: "master_sorter", name: "Master Sorter", description: "Complete all levels", difficulty: "expert" },
+    { id: "power_up_collector", name: "Power-Up Collector", description: "Collect 10 power-ups in total", difficulty: "hard" },
+    { id: "speed_runner", name: "Speed Runner", description: "Complete a level in under 1 minute", difficulty: "medium" },
+    { id: "endurance_tester", name: "Endurance Tester", description: "Play for 30 minutes in a single session", difficulty: "medium" },
+    { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape", difficulty: "medium" },
+    { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color", difficulty: "medium" },
+    { id: "lucky_sorter", name: "Lucky Sorter", description: "Sort an item correctly on the first try in a level", difficulty: "easy" },
+    { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once", difficulty: "hard" }
 ];
+
+let currentDifficulty = "easy";
 
 function unlockAchievement(id) {
     if (!unlockedAchievements[id]) {
@@ -1312,10 +1336,10 @@ function checkSortingAchievements() {
 
 function updateAchievementsList() {
     achievementsList.innerHTML = '';
-    const unlocked = achievements.filter(a => unlockedAchievements[a.id]);
+    const unlocked = achievements.filter(a => unlockedAchievements[a.id] && a.difficulty === currentDifficulty);
     if (unlocked.length === 0) {
         const li = document.createElement('li');
-        li.textContent = 'No achievements unlocked yet.';
+        li.textContent = `No ${currentDifficulty} achievements unlocked yet.`;
         achievementsList.appendChild(li);
     } else {
         unlocked.forEach(achievement => {
@@ -1325,6 +1349,19 @@ function updateAchievementsList() {
         });
     }
 }
+
+// Add event listeners for tab buttons
+document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', () => {
+        currentDifficulty = button.getAttribute('data-difficulty');
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        updateAchievementsList();
+    });
+});
+
+// Set initial active tab
+document.querySelector('.tab-button[data-difficulty="easy"]').classList.add('active');
 
 function createParticles(position, color) {
     const particleMaterial = new THREE.MeshBasicMaterial({ color: color });
@@ -1520,11 +1557,11 @@ function onMove(event) {
                 const itemPos = selectedItem.position;
                 const distance = Math.sqrt(Math.pow(itemPos.x - binPos.x, 2) + Math.pow(itemPos.z - binPos.z, 2));
                 const isCorrectBin = bin.color === selectedItem.material.color.getHex();
-                bin.mesh.children[0].visible = distance < 1.65 && isCorrectBin && !selectedItem.userData.effect;
+                bin.highlightOutline.visible = distance < 1.65 && isCorrectBin && !selectedItem.userData.effect;
             });
         }
     } else if (window.bins) {
-        window.bins.forEach(bin => bin.mesh.children[0].visible = false);
+        window.bins.forEach(bin => bin.highlightOutline.visible = false);
     }
 }
 
@@ -1757,7 +1794,7 @@ function onEnd(event) {
         }
         selectedItem = null;
         if (window.bins) {
-            window.bins.forEach(bin => bin.mesh.children[0].visible = false);
+            window.bins.forEach(bin => bin.highlightOutline.visible = false);
         }
     }
 }
