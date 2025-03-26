@@ -262,7 +262,6 @@ const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
 // Items and Spawning
 const items = [];
 let spawnInterval;
-let lastSpawnZ = 20;
 
 const shapes = [
     { type: 'cube', geometry: new THREE.BoxGeometry(2.25, 2.25, 2.25), color: 0xff0000, needsSorting: true, weight: 0.49, radius: 1.125 },
@@ -303,6 +302,12 @@ function createItem() {
     }
     const item = new THREE.Mesh(shape.geometry, material);
     
+    // Add outline
+    const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+    const outlineMesh = new THREE.Mesh(shape.geometry, outlineMaterial);
+    outlineMesh.scale.multiplyScalar(1.05);
+    item.add(outlineMesh);
+    
     let xPos;
     let isOverlapping;
     const maxAttempts = 10;
@@ -326,7 +331,7 @@ function createItem() {
         isOverlapping = items.some(existing => {
             if (existing.userData.isDragging) return false;
             const dx = xPos - existing.position.x;
-            const dz = lastSpawnZ - existing.position.z;
+            const dz = 20 - existing.position.z;
             const distance = Math.sqrt(dx * dx + dz * dz);
             return distance < (shape.radius + (existing.geometry.type === 'BoxGeometry' ? 1.125 : existing.geometry.type === 'TetrahedronGeometry' ? 0.75 : existing.geometry.type === 'ConeGeometry' ? 1.5 : existing.geometry.type === 'IcosahedronGeometry' ? 1 : 1.5));
         });
@@ -335,7 +340,7 @@ function createItem() {
     }
     
     const offset = getOffset(shape);
-    item.position.set(xPos, conveyorHeight + offset, lastSpawnZ);
+    item.position.set(xPos, conveyorHeight + offset, 20); // Always spawn at z=20
     item.castShadow = true;
     item.receiveShadow = true;
     item.userData.needsSorting = shape.needsSorting || false;
@@ -346,8 +351,6 @@ function createItem() {
         const light = new THREE.PointLight(shape.color, 1, 5);
         item.add(light);
     }
-    lastSpawnZ -= 6;
-    if (lastSpawnZ < 14) lastSpawnZ = 20;
 
     if (shape.effect) {
         const textDiv = document.createElement('div');
@@ -386,7 +389,7 @@ function spawnPowerUp(type) {
     
     let xPos = Math.random() * 12 - 6;
     const offset = getOffset(shape);
-    item.position.set(xPos, conveyorHeight + offset, 20);
+    item.position.set(xPos, conveyorHeight + offset, 20); // Always spawn at z=20
     item.castShadow = true;
     item.receiveShadow = true;
     item.userData.effect = shape.effect;
