@@ -21,12 +21,13 @@
                 <button id="start-button">Start</button>
                 <button id="level-select-button">Level Select</button>
                 <button id="instructions-button">How to Play</button>
+                <button id="achievements-button">Achievements</button>
             </div>
             <div class="column-right">
                 <button id="power-ups-button">Power-Ups</button>
                 <button id="settings-button-start">Settings</button>
                 <button id="stats-button">Stats</button>
-                <button id="achievements-button">Achievements</button>
+                <button id="updates-button">Updates</button>
             </div>
         </div>
         <div class="ad-container" style="width: 300px; height: 250px; margin: 20px auto;">
@@ -41,11 +42,13 @@
     </div>
     <div id="stats-screen" style="display: none;">
         <h2>Player Stats</h2>
-        <p>Total Items Sorted: <span id="total-sorted">Coming Soon</span></p>
-        <p>Red Cubes Sorted: <span id="red-sorted">Coming Soon</span></p>
-        <p>Blue Triangles Sorted: <span id="blue-sorted">Coming Soon</span></p>
-        <p>Yellow Spheres Sorted: <span id="yellow-sorted">Coming Soon</span></p>
+        <p>Total Items Sorted: <span id="total-sorted">0</span></p>
+        <p>Red Cubes Sorted: <span id="red-sorted">0</span></p>
+        <p>Blue Triangles Sorted: <span id="blue-sorted">0</span></p>
+        <p>Yellow Spheres Sorted: <span id="yellow-sorted">0</span></p>
+        <p>Green Cones Sorted: <span id="green-sorted">0</span></p>
         <p>Levels Failed: <span id="levels-failed">0</span></p>
+        <p>Total Hours Played: <span id="total-hours-played">0.0</span></p>
         <button id="back-to-start-from-stats">Back</button>
     </div>
     <div id="achievements-screen" style="display: none;">
@@ -56,8 +59,28 @@
             <button class="tab-button" data-difficulty="hard">Hard</button>
             <button class="tab-button" data-difficulty="expert">Expert</button>
         </div>
+        <p id="achievement-counter"></p>
         <ul id="achievements-list"></ul>
         <button id="back-to-start-from-achievements">Back</button>
+    </div>
+    <div id="updates-screen" style="display: none;">
+        <h2>Latest Updates</h2>
+        <ul>
+            <li>Update Alpha v0.38 - Fixed spawning issue where items would spawn too far down the conveyor.</li>
+            <li>Update v0.39 - Added outline for sortable items to make them easier to see. Added total hours played to be tracked in stats.</li>
+            <li>Update v0.40 -
+                <ul>
+                    <li>Added outline for sorting bins to make them easier to see.</li>
+                    <li>Adjusted the complete level button to stay stationary but glow when hovered over.</li>
+                    <li>Added green items to stats page.</li>
+                    <li>Moved some medium achievements to easy.</li>
+                    <li>Added 5 more levels.</li>
+                    <li>Gave achievements page more styling.</li>
+                    <li>Added Updates Section</li>
+                </ul>
+            </li>
+        </ul>
+        <button id="back-to-start-from-updates">Back</button>
     </div>
     <div id="level-select-screen" style="display: none;">
         <h2>Level Select</h2>
@@ -161,7 +184,7 @@
         <div id="level-display">Level 1</div>
         <div id="lives-container">
             <span id="lives-text">Lives: 3</span>
-            <span class="heart" id="heart1">♥</ispiel>
+            <span class="heart" id="heart1">♥</span>
             <span class="heart" id="heart2">♥</span>
             <span class="heart" id="heart3">♥</span>
         </div>
@@ -175,7 +198,7 @@
             Top Sorted: <span id="top-sorted-count">0</span>
         </div>
         <div id="power-up-status" style="display: none;"></div>
-        <div id="version  <div id="version-container">Alpha v0.40</div>
+        <div id="version-container">Alpha v0.40</div>
         <button id="restart-button">Restart Game</button>
         <button id="pause-resume-button">Pause</button>
         <button id="end-level-button" style="display: none;">Complete Level</button>
@@ -239,7 +262,7 @@
         <label>Game Sounds Volume: <input type="range" id="sounds-volume" min="0" max="1" step="0.1" value="1"></label>
         <label><input type="checkbox" id="mute-music"> Mute Music</label>
         <label>Music Volume: <input type="range" id="music-volume" min="0" max="1" step="0.1" value="1"></label>
-        <button id="reset-game-data">Reset Game Data</button> <!-- New Reset Button -->
+        <button id="reset-game-data">Reset Game Data</button>
         <button id="close-settings">Close</button>
         <p id="game-paused-text" style="display: none;">Game Paused</p>
     </div>
@@ -267,7 +290,8 @@
     <audio id="sort-fail" src="buzz.wav" preload="auto"></audio>
     <audio id="level-success" src="level_success.wav" preload="auto"></audio>
     <audio id="game-music" src="gamemusic.wav" preload="auto" loop></audio>
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="game.js"></script>
     <script>
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -278,5 +302,5 @@
       (adsbygoogle = window.adsbygoogle || []).push({});
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92531a664d6144e4',t:'MTc0Mjc4NzE2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'925a7390a9bac25a',t:'MTc0Mjg2NDIxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'925a85e149237ba5',t:'MTc0Mjg2NDk2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'926395d939f9bfd6',t:'MTc0Mjk1OTk5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'926417839a6d672d',t:'MTc0Mjk2NTMwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

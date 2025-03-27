@@ -11,7 +11,7 @@ body {
     touch-action: none; /* NEW: Prevents default touch behaviors */
 }
 
-#start-screen, #pause-screen, #settings-screen, #level-select-screen, #level-select-page-2, #level-select-page-3, #game-over-screen, #level-complete-screen, #instructions-screen, #stats-screen, #achievements-screen, #dev-tools-bubble, #power-up-menu, #level-start-screen, #power-ups-screen {
+#start-screen, #pause-screen, #settings-screen, #level-select-screen, #level-select-page-2, #level-select-page-3, #game-over-screen, #level-complete-screen, #instructions-screen, #stats-screen, #achievements-screen, #dev-tools-bubble, #power-up-menu, #level-start-screen, #power-ups-screen, #updates-screen {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -44,7 +44,7 @@ body {
     text-shadow: 0 0 5px #28a745, 0 0 10px #28a745; /* Glow effect */
 }
 
-#pause-screen h2, #settings-screen h2, #level-select-screen h2, #level-select-page-2 h2, #level-select-page-3 h2, #game-over-screen h2, #level-complete-screen h2, #instructions-screen h2, #stats-screen h2, #dev-tools-bubble h3, #power-up-menu h3, #level-start-screen h2 {
+#pause-screen h2, #settings-screen h2, #level-select-screen h2, #level-select-page-2 h2, #level-select-page-3 h2, #game-over-screen h2, #level-complete-screen h2, #instructions-screen h2, #stats-screen h2, #achievements-screen h2, #dev-tools-bubble h3, #power-up-menu h3, #level-start-screen h2, #updates-screen h2 {
     margin: 0 0 25px;
     font-family: 'Orbitron', sans-serif;
     font-size: 36px;
@@ -58,7 +58,7 @@ body {
     text-shadow: 0 0 3px #ffffff;
 }
 
-#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #level-select-page-3 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #dev-tools-bubble button, #power-up-menu button, #level-start-screen button {
+#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #level-select-page-3 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #achievements-screen button:not(.tab-button), #dev-tools-bubble button, #power-up-menu button, #level-start-screen button, #updates-screen button {
     display: block;
     margin: 15px auto;
     padding: 12px 25px;
@@ -72,14 +72,20 @@ body {
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
-#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #level-select-page-3 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover {
+#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #level-select-page-3 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #achievements-screen button:not(.tab-button):hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover, #updates-screen button:hover {
     background: linear-gradient(135deg, #218838, #1e7e34);
     transform: scale(1.05); /* Slight enlargement */
 }
 
-#start-screen p, #pause-screen p, #settings-screen p, #level-select-screen p, #level-select-page-2 p, #level-select-page-3 p, #game-over-screen p, #level-complete-screen p, #instructions-screen p, #stats-screen p, #dev-tools-bubble p, #power-up-menu p {
+#start-screen p, #pause-screen p, #settings-screen p, #level-select-screen p, #level-select-page-2 p, #level-select-page-3 p, #game-over-screen p, #level-complete-screen p, #instructions-screen p, #stats-screen p, #achievements-screen p, #dev-tools-bubble p, #power-up-menu p {
     margin: 10px 0;
     font-size: 18px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+#achievement-counter {
+    font-size: 18px;
+    margin: 10px 0;
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
 }
 
@@ -309,16 +315,17 @@ body {
     border-radius: 10px;
     cursor: pointer;
     z-index: 10;
-    transition: transform 0.2s, background 0.2s;
+    transition: background 0.2s, box-shadow 0.2s;
 }
 
-#restart-button:hover, #pause-resume-button:hover, #end-level-button:hover {
+#restart-button:hover, #pause-resume-button:hover {
     background: linear-gradient(135deg, #218838, #1e7e34);
     transform: scale(1.05);
 }
 
 #end-level-button:hover {
     background: linear-gradient(135deg, #c82333, #b21f2d);
+    box-shadow: 0 0 10px #ffffff;
 }
 
 .power-up-text {
@@ -405,4 +412,84 @@ body {
     height: 250px;
     margin-left: auto;
     margin-right: auto;
+}
+
+/* New styles for achievements */
+#achievements-list li {
+    background: rgba(255, 255, 255, 0.1);
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+#achievements-list li.easy {
+    border-left: 5px solid #28a745;
+}
+
+#achievements-list li.medium {
+    border-left: 5px solid #ff8c00;
+}
+
+#achievements-list li.hard {
+    border-left: 5px solid #dc3545;
+}
+
+#achievements-list li.expert {
+    border-left: 5px solid #6f42c1;
+}
+
+@media (max-width: 768px) {
+    #achievements-screen {
+        width: 90%;
+        padding: 20px;
+    }
+    #achievements-list li {
+        font-size: 16px;
+    }
+}
+
+/* New styles for tabs */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    font-size: 18px;
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin: 0 5px;
+}
+
+.tab-button.active {
+    background: linear-gradient(135deg, #28a745, #218838);
+}
+
+.tab-button:hover {
+    background: linear-gradient(135deg, #5a6268, #4d545a);
+}
+
+/* New styles for updates screen */
+#updates-screen ul {
+    list-style-type: none;
+    padding: 0;
+    text-align: left;
+}
+
+#updates-screen li {
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+#updates-screen ul ul {
+    margin-left: 20px;
 }

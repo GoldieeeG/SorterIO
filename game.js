@@ -154,8 +154,8 @@ function setupConveyors() {
     conveyorBelts.forEach(belt => scene.remove(belt));
     conveyorBelts = [];
 
-    if (currentLevel >= 26 && currentLevel <= 30) {
-        // Two conveyors for levels 26-30
+    if (currentLevel >= 26 && currentLevel <= 35) {
+        // Two conveyors for levels 26-35
         const leftBeltGeometry = new THREE.PlaneGeometry(10, 38);
         const leftBelt = new THREE.Mesh(leftBeltGeometry, beltMaterial);
         leftBelt.rotation.x = -Math.PI / 2;
@@ -191,8 +191,8 @@ function setupTroughs() {
     troughs.forEach(trough => scene.remove(trough));
     troughs = [];
 
-    if (currentLevel >= 26 && currentLevel <= 30) {
-        // Two troughs for levels 26-30
+    if (currentLevel >= 26 && currentLevel <= 35) {
+        // Two troughs for levels 26-35
         const troughGeometry = new THREE.BufferGeometry();
         const troughVertices = new Float32Array([
             -5, 0, -2,  5, 0, -2,  5, 0, 2,  -5, 0, 2,
@@ -313,7 +313,7 @@ function createItem() {
     const maxAttempts = 10;
 
     let conveyorChoice;
-    if (currentLevel >= 26 && currentLevel <= 30) {
+    if (currentLevel >= 26 && currentLevel <= 35) {
         conveyorChoice = Math.random() < 0.5 ? 'left' : 'right';
     } else {
         conveyorChoice = 'center';
@@ -469,11 +469,11 @@ const binVertices = new Float32Array([
     1.5, 0, -1.5,  1.5, 0, 1.5,  1.5, 1.5, 1.5,  1.5, 1.5, -1.5
 ]);
 const binIndices = [
-    0, 1, 2,  0, 2, 3,  // bottom
-    4, 5, 6,  4, 6, 7,  // front
-    10, 9, 8,  11, 10, 8,  // back (corrected)
-    12, 13, 14, 12, 14, 15,  // left
-    18, 17, 16, 19, 18, 16  // right (corrected)
+    0, 1, 2,  0, 2, 3,
+    4, 5, 6,  4, 6, 7,
+    10, 9, 8,  11, 10, 8,
+    12, 13, 14, 12, 14, 15,
+    18, 17, 16, 19, 18, 16
 ];
 binGeometry.setAttribute('position', new THREE.BufferAttribute(binVertices, 3));
 binGeometry.setIndex(binIndices);
@@ -506,7 +506,7 @@ function setupBins() {
                 bins.push({ color: 0x00ff00, mesh: bin4 });
             }
 
-            if (currentLevel >= 26 && currentLevel <= 30) {
+            if (currentLevel >= 26 && currentLevel <= 35) {
                 bins[0].mesh.position.set(-15, 0.1, 0); // Red
                 bins[1].mesh.position.set(-15, 0.1, 4); // Blue
                 if (currentLevel >= 10) {
@@ -570,7 +570,7 @@ function setupBins() {
                 bins.push({ color: 0x00ff00, mesh: bin4 });
             }
 
-            if (currentLevel >= 26 && currentLevel <= 30) {
+            if (currentLevel >= 26 && currentLevel <= 35) {
                 bins[0].mesh.position.set(-15, 0.1, 0);
                 bins[1].mesh.position.set(-15, 0.1, 4);
                 if (currentLevel >= 10) {
@@ -641,13 +641,15 @@ let blueTrianglesSorted = parseInt(localStorage.getItem('blueTrianglesSorted')) 
 let yellowSpheresSorted = parseInt(localStorage.getItem('yellowSpheresSorted')) || 0;
 let greenConesSorted = parseInt(localStorage.getItem('greenConesSorted')) || 0;
 let levelsFailed = parseInt(localStorage.getItem('levelsFailed')) || 0;
+let totalPlayTime = parseFloat(localStorage.getItem('totalPlayTime')) || 0; // in seconds
 let topSortedPerLevel = { 
     1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 
     6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 
     11: 0, 12: 0, 13: 0, 14: 0, 15: 0,
     16: 0, 17: 0, 18: 0, 19: 0, 20: 0,
     21: 0, 22: 0, 23: 0, 24: 0, 25: 0,
-    26: 0, 27: 0, 28: 0, 29: 0, 30: 0
+    26: 0, 27: 0, 28: 0, 29: 0, 30: 0,
+    31: 0, 32: 0, 33: 0, 34: 0, 35: 0
 };
 let isPaused = false;
 let isMutedSounds = localStorage.getItem('isMutedSounds') === 'true';
@@ -686,16 +688,12 @@ let powerUpsUsed = JSON.parse(localStorage.getItem('powerUpsUsed')) || {
 };
 let levelItemsSorted = 0;
 
-let levelUnlocks = JSON.parse(localStorage.getItem('levelUnlocks')) || { 
-    2: false, 3: false, 4: false, 5: false, 
-    6: false, 7: false, 8: false, 9: false, 
-    10: false, 11: false, 12: false, 13: false, 
-    14: false, 15: false, 16: false, 17: false, 
-    18: false, 19: false, 20: false, 21: false, 
-    22: false, 23: false, 24: false, 25: false, 
-    26: false, 27: false, 28: false, 29: false, 
-    30: false 
-};
+let levelUnlocks = JSON.parse(localStorage.getItem('levelUnlocks')) || {};
+for (let i = 2; i <= 35; i++) {
+    if (!(i in levelUnlocks)) {
+        levelUnlocks[i] = false;
+    }
+}
 
 let unlockedAchievements = JSON.parse(localStorage.getItem('unlockedAchievements')) || {};
 
@@ -728,14 +726,34 @@ const levelButtons = {
     27: document.getElementById('level-27-button'),
     28: document.getElementById('level-28-button'),
     29: document.getElementById('level-29-button'),
-    30: document.getElementById('level-30-button')
+    30: document.getElementById('level-30-button'),
+    31: document.getElementById('level-31-button'),
+    32: document.getElementById('level-32-button'),
+    33: document.getElementById('level-33-button'),
+    34: document.getElementById('level-34-button'),
+    35: document.getElementById('level-35-button'),
+    36: document.getElementById('level-36-button'),
+    37: document.getElementById('level-37-button'),
+    38: document.getElementById('level-38-button'),
+    39: document.getElementById('level-39-button'),
+    40: document.getElementById('level-40-button'),
+    41: document.getElementById('level-41-button'),
+    42: document.getElementById('level-42-button'),
+    43: document.getElementById('level-43-button'),
+    44: document.getElementById('level-44-button'),
+    45: document.getElementById('level-45-button')
 };
-for (let i = 2; i <= 30; i++) {
-    if (levelUnlocks[i]) {
-        levelButtons[i].textContent = `Level ${i}`;
-        levelButtons[i].disabled = false;
+for (let i = 2; i <= 45; i++) {
+    if (i <= 35) {
+        if (levelUnlocks[i]) {
+            levelButtons[i].textContent = `Level ${i}`;
+            levelButtons[i].disabled = false;
+        } else {
+            levelButtons[i].textContent = `Level ${i} (Locked)`;
+            levelButtons[i].disabled = true;
+        }
     } else {
-        levelButtons[i].textContent = `Level ${i} (Locked)`;
+        levelButtons[i].textContent = `Level ${i} (Coming Soon)`;
         levelButtons[i].disabled = true;
     }
 }
@@ -786,10 +804,13 @@ const totalSortedDisplay = document.getElementById('total-sorted');
 const redSortedDisplay = document.getElementById('red-sorted');
 const blueSortedDisplay = document.getElementById('blue-sorted');
 const yellowSortedDisplay = document.getElementById('yellow-sorted');
+const greenSortedDisplay = document.getElementById('green-sorted');
 const levelsFailedDisplay = document.getElementById('levels-failed');
+const totalHoursPlayedDisplay = document.getElementById('total-hours-played');
 const achievementsList = document.getElementById('achievements-list');
 
 const powerUpsScreen = document.getElementById('power-ups-screen');
+const updatesScreen = document.getElementById('updates-screen');
 
 let selectedLevel;
 const levelStartScreen = document.getElementById('level-start-screen');
@@ -811,6 +832,7 @@ redSortedDisplay.textContent = redCubesSorted;
 blueSortedDisplay.textContent = blueTrianglesSorted;
 yellowSortedDisplay.textContent = yellowSpheresSorted;
 levelsFailedDisplay.textContent = levelsFailed;
+totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(1);
 
 function addButtonListeners(elementId, action) {
     const element = document.getElementById(elementId);
@@ -846,7 +868,19 @@ addButtonListeners('level-1-button', () => {
     levelStartScreen.style.display = 'block';
 });
 
-for (let i = 2; i <= 30; i++) {
+addButtonListeners('updates-button', () => {
+    console.log('Updates button clicked/touched');
+    startScreen.style.display = 'none';
+    updatesScreen.style.display = 'block';
+});
+
+addButtonListeners('back-to-start-from-updates', () => {
+    console.log('Back to start from updates clicked/touched');
+    updatesScreen.style.display = 'none';
+    startScreen.style.display = 'block';
+});
+
+for (let i = 2; i <= 35; i++) {
     addButtonListeners(`level-${i}-button`, () => {
         if (levelUnlocks[i]) {
             console.log(`Level ${i} button clicked/touched`);
@@ -854,8 +888,10 @@ for (let i = 2; i <= 30; i++) {
             selectedLevelNumberDisplay.textContent = selectedLevel;
             if (i <= 15) {
                 levelSelectScreen.style.display = 'none';
-            } else {
+            } else if (i <= 30) {
                 levelSelectPage2.style.display = 'none';
+            } else {
+                levelSelectPage3.style.display = 'none';
             }
             levelStartScreen.style.display = 'block';
         }
@@ -936,7 +972,9 @@ addButtonListeners('stats-button', () => {
     redSortedDisplay.textContent = redCubesSorted;
     blueSortedDisplay.textContent = blueTrianglesSorted;
     yellowSortedDisplay.textContent = yellowSpheresSorted;
+    greenSortedDisplay.textContent = greenConesSorted;
     levelsFailedDisplay.textContent = levelsFailed;
+    totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(1);
 });
 
 addButtonListeners('achievements-button', () => {
@@ -1075,16 +1113,10 @@ document.getElementById('music-volume').addEventListener('input', (e) => {
 addButtonListeners('reset-game-data', () => {
     console.log('Reset game data button clicked/touched');
     if (confirm('Are you sure you want to reset all game data? This will reset level progress, stats, and achievements.')) {
-        levelUnlocks = {
-            2: false, 3: false, 4: false, 5: false,
-            6: false, 7: false, 8: false, 9: false,
-            10: false, 11: false, 12: false, 13: false,
-            14: false, 15: false, 16: false, 17: false,
-            18: false, 19: false, 20: false, 21: false,
-            22: false, 23: false, 24: false, 25: false,
-            26: false, 27: false, 28: false, 29: false,
-            30: false
-        };
+        levelUnlocks = {};
+        for (let i = 2; i <= 35; i++) {
+            levelUnlocks[i] = false;
+        }
         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
 
         totalItemsSorted = 0;
@@ -1093,12 +1125,14 @@ addButtonListeners('reset-game-data', () => {
         yellowSpheresSorted = 0;
         greenConesSorted = 0;
         levelsFailed = 0;
+        totalPlayTime = 0;
         localStorage.setItem('totalItemsSorted', totalItemsSorted);
         localStorage.setItem('redCubesSorted', redCubesSorted);
         localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
         localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
         localStorage.setItem('greenConesSorted', greenConesSorted);
         localStorage.setItem('levelsFailed', levelsFailed);
+        localStorage.setItem('totalPlayTime', totalPlayTime);
 
         unlockedAchievements = {};
         localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
@@ -1118,7 +1152,7 @@ addButtonListeners('reset-game-data', () => {
         localStorage.setItem('totalPowerUpsCollected', 0);
         localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
 
-        for (let i = 2; i <= 30; i++) {
+        for (let i = 2; i <= 35; i++) {
             levelButtons[i].textContent = `Level ${i} (Locked)`;
             levelButtons[i].disabled = true;
         }
@@ -1126,7 +1160,9 @@ addButtonListeners('reset-game-data', () => {
         redSortedDisplay.textContent = redCubesSorted;
         blueSortedDisplay.textContent = blueTrianglesSorted;
         yellowSortedDisplay.textContent = yellowSpheresSorted;
+        greenSortedDisplay.textContent = greenConesSorted;
         levelsFailedDisplay.textContent = levelsFailed;
+        totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(1);
         updateAchievementsList();
 
         topSortedPerLevel = {
@@ -1135,7 +1171,8 @@ addButtonListeners('reset-game-data', () => {
             11: 0, 12: 0, 13: 0, 14: 0, 15: 0,
             16: 0, 17: 0, 18: 0, 19: 0, 20: 0,
             21: 0, 22: 0, 23: 0, 24: 0, 25: 0,
-            26: 0, 27: 0, 28: 0, 29: 0, 30: 0
+            26: 0, 27: 0, 28: 0, 29: 0, 30: 0,
+            31: 0, 32: 0, 33: 0, 34: 0, 35: 0
         };
 
         alert('Game data has been reset.');
@@ -1169,7 +1206,7 @@ addButtonListeners('dev-tools-button', () => {
 
 addButtonListeners('unlock-all-button', () => {
     console.log('Unlock all button clicked/touched');
-    for (let i = 2; i <= 30; i++) {
+    for (let i = 2; i <= 35; i++) {
         levelUnlocks[i] = true;
         levelButtons[i].textContent = `Level ${i}`;
         levelButtons[i].disabled = false;
@@ -1263,8 +1300,10 @@ addButtonListeners('back-to-level-select-from-start', () => {
     levelStartScreen.style.display = 'none';
     if (selectedLevel <= 15) {
         levelSelectScreen.style.display = 'block';
-    } else {
+    } else if (selectedLevel <= 30) {
         levelSelectPage2.style.display = 'block';
+    } else {
+        levelSelectPage3.style.display = 'block';
     }
 });
 
@@ -1288,16 +1327,16 @@ addButtonListeners('restart-button', () => {
 // Achievement Functions
 const achievements = [
     { id: "novice_sorter", name: "Novice Sorter", description: "Sort 50 items in total", difficulty: "easy" },
-    { id: "red_master", name: "Red Master", description: "Sort 25 red cubes", difficulty: "medium" },
-    { id: "blue_expert", name: "Blue Expert", description: "Sort 25 blue triangles", difficulty: "medium" },
-    { id: "yellow_pro", name: "Yellow Pro", description: "Sort 25 yellow spheres", difficulty: "medium" },
+    { id: "red_master", name: "Red Master", description: "Sort 25 red cubes", difficulty: "easy" },
+    { id: "blue_expert", name: "Blue Expert", description: "Sort 25 blue triangles", difficulty: "easy" },
+    { id: "yellow_pro", name: "Yellow Pro", description: "Sort 25 yellow spheres", difficulty: "easy" },
     { id: "survivor", name: "Survivor", description: "Complete a level without losing any lives", difficulty: "medium" },
     { id: "power_up_user", name: "Power-Up User", description: "Use any power-up", difficulty: "easy" },
     { id: "speed_demon", name: "Speed Demon", description: "Complete a level in under 2 minutes", difficulty: "medium" },
     { id: "perfectionist", name: "Perfectionist", description: "Sort all items correctly without any mistakes in a level", difficulty: "medium" },
     { id: "combo_king", name: "Combo King", description: "Sort 10 items in a row without mistakes", difficulty: "medium" },
-    { id: "green_guru", name: "Green Guru", description: "Sort 25 green cones", difficulty: "medium" },
-    { id: "shape_shifter", name: "Shape Shifter", description: "Sort one of each shape in a single level", difficulty: "medium" },
+    { id: "green_guru", name: "Green Guru", description: "Sort 25 green cones", difficulty: "easy" },
+    { id: "shape_shifter", name: "Shape Shifter", description: "Sort one of each shape in a single level", difficulty: "easy" },
     { id: "color_coordinator", name: "Color Coordinator", description: "Sort 5 items of the same color in a row", difficulty: "medium" },
     { id: "power_up_pro", name: "Power-Up Pro", description: "Use 3 different power-ups in a single level", difficulty: "hard" },
     { id: "quick_sorter", name: "Quick Sorter", description: "Sort 20 items in under 1 minute", difficulty: "medium" },
@@ -1307,8 +1346,8 @@ const achievements = [
     { id: "power_up_collector", name: "Power-Up Collector", description: "Collect 10 power-ups in total", difficulty: "hard" },
     { id: "speed_runner", name: "Speed Runner", description: "Complete a level in under 1 minute", difficulty: "medium" },
     { id: "endurance_tester", name: "Endurance Tester", description: "Play for 30 minutes in a single session", difficulty: "medium" },
-    { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape", difficulty: "medium" },
-    { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color", difficulty: "medium" },
+    { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape", difficulty: "easy" },
+    { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color", difficulty: "easy" },
     { id: "lucky_sorter", name: "Lucky Sorter", description: "Sort an item correctly on the first try in a level", difficulty: "easy" },
     { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once", difficulty: "hard" }
 ];
@@ -1335,6 +1374,10 @@ function checkSortingAchievements() {
 }
 
 function updateAchievementsList() {
+    const totalAchievements = achievements.filter(a => a.difficulty === currentDifficulty).length;
+    const unlockedCount = achievements.filter(a => a.difficulty === currentDifficulty && unlockedAchievements[a.id]).length;
+    document.getElementById('achievement-counter').textContent = `Unlocked: ${unlockedCount} / ${totalAchievements}`;
+
     achievementsList.innerHTML = '';
     const unlocked = achievements.filter(a => unlockedAchievements[a.id] && a.difficulty === currentDifficulty);
     if (unlocked.length === 0) {
@@ -1344,7 +1387,8 @@ function updateAchievementsList() {
     } else {
         unlocked.forEach(achievement => {
             const li = document.createElement('li');
-            li.textContent = `${achievement.name}: ${achievement.description}`;
+            li.textContent = `🏆 ${achievement.name}: ${achievement.description}`;
+            li.classList.add(achievement.difficulty);
             achievementsList.appendChild(li);
         });
     }
@@ -1408,15 +1452,17 @@ function startGame(level) {
                   level === 11 ? 65 : level === 12 ? 70 : level === 13 ? 75 : level === 14 ? 80 : level === 15 ? 85 :
                   level === 16 ? 90 : level === 17 ? 95 : level === 18 ? 100 : level === 19 ? 105 : level === 20 ? 110 :
                   level === 21 ? 115 : level === 22 ? 120 : level === 23 ? 125 : level === 24 ? 130 : level === 25 ? 135 :
-                  level === 26 ? 140 : level === 27 ? 145 : level === 28 ? 150 : level === 29 ? 155 : level === 30 ? 165 : 15;
+                  level === 26 ? 140 : level === 27 ? 145 : level === 28 ? 150 : level === 29 ? 155 : level === 30 ? 160 :
+                  level === 31 ? 165 : level === 32 ? 170 : level === 33 ? 175 : level === 34 ? 180 : level === 35 ? 185 : 15;
     baseConveyorSpeed = level === 1 ? 0.02 : level === 2 ? 0.025 : level === 3 ? 0.028 : level === 4 ? 0.031 : level === 5 ? 0.034 :
                         level === 6 ? 0.037 : level === 7 ? 0.040 : level === 8 ? 0.043 : level === 9 ? 0.046 : level === 10 ? 0.049 :
                         level === 11 ? 0.052 : level === 12 ? 0.055 : level === 13 ? 0.058 : level === 14 ? 0.061 : level === 15 ? 0.064 :
                         level === 16 ? 0.067 : level === 17 ? 0.070 : level === 18 ? 0.073 : level === 19 ? 0.076 : level === 20 ? 0.079 :
                         level === 21 ? 0.082 : level === 22 ? 0.085 : level === 23 ? 0.088 : level === 24 ? 0.091 : level === 25 ? 0.094 :
-                        level === 26 ? 0.097 : level === 27 ? 0.100 : level === 28 ? 0.103 : level === 29 ? 0.106 : level === 30 ? 0.109 : 0.02;
-    if (currentLevel >= 26 && currentLevel <= 30) {
-        baseConveyorSpeed *= 0.5; // Reduce speed by 50% for levels 26-30
+                        level === 26 ? 0.097 : level === 27 ? 0.100 : level === 28 ? 0.103 : level === 29 ? 0.106 : level === 30 ? 0.109 :
+                        level === 31 ? 0.112 : level === 32 ? 0.115 : level === 33 ? 0.118 : level === 34 ? 0.121 : level === 35 ? 0.124 : 0.02;
+    if (currentLevel >= 26 && currentLevel <= 35) {
+        baseConveyorSpeed *= 0.5; // Reduce speed by 50% for levels 26-35
     }
     conveyorSpeed = baseConveyorSpeed;
     neededTotalDisplay.textContent = itemsNeeded;
@@ -1453,6 +1499,7 @@ function togglePause() {
         pauseScreen.style.display = 'block';
         pauseResumeButton.textContent = 'Resume';
         gameMusic.pause();
+        localStorage.setItem('totalPlayTime', totalPlayTime);
     } else {
         startSpawning();
         pauseScreen.style.display = 'none';
@@ -1492,6 +1539,7 @@ function cleanupGame() {
     items.length = 0;
     particles.forEach(particle => scene.remove(particle));
     particles.length = 0;
+    localStorage.setItem('totalPlayTime', totalPlayTime);
 }
 
 function restartGame() {
@@ -1735,8 +1783,8 @@ function onEnd(event) {
                                     if (!mistakesMade) unlockAchievement("perfectionist");
                                     if (lives === 3) unlockAchievement("survivor");
                                     if (currentLevel === 10) unlockAchievement("level_conqueror");
-                                    if (currentLevel === 30) unlockAchievement("master_sorter");
-                                    if (currentLevel < 30) {
+                                    if (currentLevel === 35) unlockAchievement("master_sorter");
+                                    if (currentLevel < 35) {
                                         levelUnlocks[currentLevel + 1] = true;
                                         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
                                         if (levelButtons[currentLevel + 1]) {
