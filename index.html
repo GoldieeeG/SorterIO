@@ -38,17 +38,19 @@
                  data-ad-format="auto"></ins>
         </div>
         <p>Created by Goldie 2025</p>
-        <p id="version-text">Alpha v0.40</p>
+        <p id="version-text">Alpha v0.41</p>
     </div>
     <div id="stats-screen" style="display: none;">
         <h2>Player Stats</h2>
-        <p>Total Items Sorted: <span id="total-sorted">0</span></p>
-        <p>Red Cubes Sorted: <span id="red-sorted">0</span></p>
-        <p>Blue Triangles Sorted: <span id="blue-sorted">0</span></p>
-        <p>Yellow Spheres Sorted: <span id="yellow-sorted">0</span></p>
-        <p>Green Cones Sorted: <span id="green-sorted">0</span></p>
-        <p>Levels Failed: <span id="levels-failed">0</span></p>
-        <p>Total Hours Played: <span id="total-hours-played">0.0</span></p>
+        <ul class="stats-list">
+            <li class="stat-item">Total Items Sorted: <span id="total-sorted">0</span></li>
+            <li class="stat-item">Red Cubes Sorted: <span id="red-sorted">0</span></li>
+            <li class="stat-item">Blue Triangles Sorted: <span id="blue-sorted">0</span></li>
+            <li class="stat-item">Yellow Spheres Sorted: <span id="yellow-sorted">0</span></li>
+            <li class="stat-item">Green Cones Sorted: <span id="green-sorted">0</span></li>
+            <li class="stat-item">Levels Failed: <span id="levels-failed">0</span></li>
+            <li class="stat-item">Total Hours Played: <span id="total-hours-played">0.00</span></li>
+        </ul>
         <button id="back-to-start-from-stats">Back</button>
     </div>
     <div id="achievements-screen" style="display: none;">
@@ -66,9 +68,7 @@
     <div id="updates-screen" style="display: none;">
         <h2>Latest Updates</h2>
         <ul>
-            <li>Update Alpha v0.38 - Fixed spawning issue where items would spawn too far down the conveyor.</li>
-            <li>Update v0.39 - Added outline for sortable items to make them easier to see. Added total hours played to be tracked in stats.</li>
-            <li>Update v0.40 -
+            <li><span class="update-version">Update v0.40</span> -
                 <ul>
                     <li>Added outline for sorting bins to make them easier to see.</li>
                     <li>Adjusted the complete level button to stay stationary but glow when hovered over.</li>
@@ -77,6 +77,16 @@
                     <li>Added 5 more levels.</li>
                     <li>Gave achievements page more styling.</li>
                     <li>Added Updates Section</li>
+                </ul>
+            </li>
+            <li><span class="update-version">Update v0.41</span> -
+                <ul>
+                    <li>Increased spawn rates for all powerups.</li>
+                    <li>Added levels up to 45. Reduced amount of items required to pass level 36-45.</li>
+                    <li>15 more levels coming soon!</li>
+                    <li>Added more achievements</li>
+                    <li>Visual enchancements, UI Upgrades.</li>
+                    <li>Fixed an issue causing hours played to not be logged in stats properly.</li>
                 </ul>
             </li>
         </ul>
@@ -170,7 +180,69 @@
         </div>
         <div id="level-select-buttons-page-3">
             <button id="prev-page-button-page-3">Previous Page</button>
+            <button id="next-page-button-page-3">Next Page</button>
             <button id="back-to-start-page-3">Back</button>
+        </div>
+    </div>
+    <div id="level-select-page-4" style="display: none;">
+        <h2>Level Select (Page 4)</h2>
+        <div id="level-columns-page-4">
+            <div class="level-column">
+                <button class="level-button" id="level-46-button" disabled>Level 46 (Coming Soon)</button>
+                <button class="level-button" id="level-47-button" disabled>Level 47 (Coming Soon)</button>
+                <button class="level-button" id="level-48-button" disabled>Level 48 (Coming Soon)</button>
+                <button class="level-button" id="level-49-button" disabled>Level 49 (Coming Soon)</button>
+                <button class="level-button" id="level-50-button" disabled>Level 50 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-51-button" disabled>Level 51 (Coming Soon)</button>
+                <button class="level-button" id="level-52-button" disabled>Level 52 (Coming Soon)</button>
+                <button class="level-button" id="level-53-button" disabled>Level 53 (Coming Soon)</button>
+                <button class="level-button" id="level-54-button" disabled>Level 54 (Coming Soon)</button>
+                <button class="level-button" id="level-55-button" disabled>Level 55 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-56-button" disabled>Level 56 (Coming Soon)</button>
+                <button class="level-button" id="level-57-button" disabled>Level 57 (Coming Soon)</button>
+                <button class="level-button" id="level-58-button" disabled>Level 58 (Coming Soon)</button>
+                <button class="level-button" id="level-59-button" disabled>Level 59 (Coming Soon)</button>
+                <button class="level-button" id="level-60-button" disabled>Level 60 (Coming Soon)</button>
+            </div>
+        </div>
+        <div id="level-select-buttons-page-4">
+            <button id="prev-page-button-page-4">Previous Page</button>
+            <button id="next-page-button-page-4">Next Page</button>
+            <button id="back-to-start-page-4">Back</button>
+        </div>
+    </div>
+    <div id="level-select-page-5" style="display: none;">
+        <h2>Level Select (Page 5)</h2>
+        <div id="level-columns-page-5">
+            <div class="level-column">
+                <button class="level-button" id="level-61-button" disabled>Level 61 (Coming Soon)</button>
+                <button class="level-button" id="level-62-button" disabled>Level 62 (Coming Soon)</button>
+                <button class="level-button" id="level-63-button" disabled>Level 63 (Coming Soon)</button>
+                <button class="level-button" id="level-64-button" disabled>Level 64 (Coming Soon)</button>
+                <button class="level-button" id="level-65-button" disabled>Level 65 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-66-button" disabled>Level 66 (Coming Soon)</button>
+                <button class="level-button" id="level-67-button" disabled>Level 67 (Coming Soon)</button>
+                <button class="level-button" id="level-68-button" disabled>Level 68 (Coming Soon)</button>
+                <button class="level-button" id="level-69-button" disabled>Level 69 (Coming Soon)</button>
+                <button class="level-button" id="level-70-button" disabled>Level 70 (Coming Soon)</button>
+            </div>
+            <div class="level-column">
+                <button class="level-button" id="level-71-button" disabled>Level 71 (Coming Soon)</button>
+                <button class="level-button" id="level-72-button" disabled>Level 72 (Coming Soon)</button>
+                <button class="level-button" id="level-73-button" disabled>Level 73 (Coming Soon)</button>
+                <button class="level-button" id="level-74-button" disabled>Level 74 (Coming Soon)</button>
+                <button class="level-button" id="level-75-button" disabled>Level 75 (Coming Soon)</button>
+            </div>
+        </div>
+        <div id="level-select-buttons-page-5">
+            <button id="prev-page-button-page-5">Previous Page</button>
+            <button id="back-to-start-page-5">Back</button>
         </div>
     </div>
     <div id="level-start-screen" style="display: none;">
@@ -198,7 +270,7 @@
             Top Sorted: <span id="top-sorted-count">0</span>
         </div>
         <div id="power-up-status" style="display: none;"></div>
-        <div id="version-container">Alpha v0.40</div>
+        <div id="version-container">Alpha v0.41</div>
         <button id="restart-button">Restart Game</button>
         <button id="pause-resume-button">Pause</button>
         <button id="end-level-button" style="display: none;">Complete Level</button>
@@ -302,5 +374,5 @@
       (adsbygoogle = window.adsbygoogle || []).push({});
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'926c36fbed23c002',t:'MTc0MzA1MDQ4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92734ba7df68bf8e',t:'MTc0MzEyNDcyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c5ea1f97953d8',t:'MTc0MzIxOTg3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c8c6369c38834',t:'MTc0MzIyMTc1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c990218a1bfe8',t:'MTc0MzIyMjI2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

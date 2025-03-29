@@ -13,7 +13,7 @@ camera.lookAt(0, 0, 0);
 const conveyorHeight = 2.03;
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Increased from 0.5 to prevent dark overtone
 scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
 directionalLight.position.set(10, 20, 10);
@@ -148,39 +148,58 @@ troughTextureLoader.load(
 // Manage Conveyors and Troughs
 let conveyorBelts = [];
 let troughs = [];
+let leftConveyorDirection, rightConveyorDirection, conveyorDirection;
 
 function setupConveyors() {
     // Remove existing conveyors
     conveyorBelts.forEach(belt => scene.remove(belt));
     conveyorBelts = [];
 
-    if (currentLevel >= 26 && currentLevel <= 35) {
-        // Two conveyors for levels 26-35
-        const leftBeltGeometry = new THREE.PlaneGeometry(10, 38);
-        const leftBelt = new THREE.Mesh(leftBeltGeometry, beltMaterial);
+    if (currentLevel >= 26) {
+        const leftBeltMaterial = beltMaterial.clone();
+        const rightBeltMaterial = beltMaterial.clone();
+        let leftBeltGeometry;
+        if (currentLevel >= 36 && currentLevel <= 45) {
+            leftBeltGeometry = new THREE.PlaneGeometry(10, 40); // Extended to 40 units for levels 36-45
+        } else {
+            leftBeltGeometry = new THREE.PlaneGeometry(10, 38);
+        }
+        const leftBelt = new THREE.Mesh(leftBeltGeometry, leftBeltMaterial);
         leftBelt.rotation.x = -Math.PI / 2;
-        leftBelt.position.set(-7.5, conveyorHeight, 1);
+        leftBelt.position.set(-7.5, conveyorHeight, currentLevel >= 36 && currentLevel <= 45 ? 0 : 1); // z=0 for 40-unit length (z=-20 to z=20), z=1 otherwise (z=-18 to z=20)
         leftBelt.castShadow = true;
         leftBelt.receiveShadow = true;
+        leftBelt.userData.direction = leftConveyorDirection;
+        leftBelt.userData.textureOffset = 0;
+        if (currentLevel >= 36 && currentLevel <= 45) {
+            leftBelt.userData.textureDirectionMultiplier = -1; // Reverse texture direction for left conveyor in levels 36-45
+        } else {
+            leftBelt.userData.textureDirectionMultiplier = 1; // Normal texture direction
+        }
         scene.add(leftBelt);
         conveyorBelts.push(leftBelt);
 
         const rightBeltGeometry = new THREE.PlaneGeometry(10, 38);
-        const rightBelt = new THREE.Mesh(rightBeltGeometry, beltMaterial);
+        const rightBelt = new THREE.Mesh(rightBeltGeometry, rightBeltMaterial);
         rightBelt.rotation.x = -Math.PI / 2;
-        rightBelt.position.set(7.5, conveyorHeight, 1);
+        rightBelt.position.set(7.5, conveyorHeight, 1); // z=1 (z=-18 to z=20)
         rightBelt.castShadow = true;
         rightBelt.receiveShadow = true;
+        rightBelt.userData.direction = rightConveyorDirection;
+        rightBelt.userData.textureOffset = 0;
+        rightBelt.userData.textureDirectionMultiplier = 1; // Normal texture direction
         scene.add(rightBelt);
         conveyorBelts.push(rightBelt);
     } else {
-        // Single conveyor for levels 1-25
         const beltGeometry = new THREE.PlaneGeometry(20, 38);
         const conveyorBelt = new THREE.Mesh(beltGeometry, beltMaterial);
         conveyorBelt.rotation.x = -Math.PI / 2;
         conveyorBelt.position.set(0, conveyorHeight, 1);
         conveyorBelt.castShadow = true;
         conveyorBelt.receiveShadow = true;
+        conveyorBelt.userData.direction = conveyorDirection;
+        conveyorBelt.userData.textureOffset = 0;
+        conveyorBelt.userData.textureDirectionMultiplier = 1; // Normal texture direction
         scene.add(conveyorBelt);
         conveyorBelts.push(conveyorBelt);
     }
@@ -191,8 +210,7 @@ function setupTroughs() {
     troughs.forEach(trough => scene.remove(trough));
     troughs = [];
 
-    if (currentLevel >= 26 && currentLevel <= 35) {
-        // Two troughs for levels 26-35
+    if (currentLevel >= 26) {
         const troughGeometry = new THREE.BufferGeometry();
         const troughVertices = new Float32Array([
             -5, 0, -2,  5, 0, -2,  5, 0, 2,  -5, 0, 2,
@@ -212,21 +230,24 @@ function setupTroughs() {
         troughGeometry.setIndex(troughIndices);
         troughGeometry.computeVertexNormals();
 
+        const leftMinZ = (currentLevel >= 36 && currentLevel <= 45) ? -20 : -18;
+        const leftMaxZ = (currentLevel >= 36 && currentLevel <= 45) ? 20 : 20;
+        const leftTroughZ = leftConveyorDirection > 0 ? leftMaxZ : leftMinZ; // z=20 for direction=1 (levels 36-45), z=-18 otherwise
         const leftTrough = new THREE.Mesh(troughGeometry, troughMaterial);
-        leftTrough.position.set(-7.5, 0.03, -18);
+        leftTrough.position.set(-7.5, 0.03, leftTroughZ);
         leftTrough.castShadow = true;
         leftTrough.receiveShadow = true;
         scene.add(leftTrough);
         troughs.push(leftTrough);
 
+        const rightTroughZ = rightConveyorDirection > 0 ? 20 : -18; // Always -18 as rightConveyorDirection = -1
         const rightTrough = new THREE.Mesh(troughGeometry, troughMaterial);
-        rightTrough.position.set(7.5, 0.03, -18);
+        rightTrough.position.set(7.5, 0.03, rightTroughZ);
         rightTrough.castShadow = true;
         rightTrough.receiveShadow = true;
         scene.add(rightTrough);
         troughs.push(rightTrough);
     } else {
-        // Single trough for levels 1-25
         const troughGeometry = new THREE.BufferGeometry();
         const troughVertices = new Float32Array([
             -10, 0, -2,  10, 0, -2,  10, 0, 2,  -10, 0, 2,
@@ -268,10 +289,10 @@ const shapes = [
     { type: 'triangle', geometry: new THREE.TetrahedronGeometry(1.5), color: 0x0000ff, needsSorting: true, weight: 0.49, radius: 0.75 },
     { type: 'sphere', geometry: new THREE.SphereGeometry(1.5, 32, 32), color: 0xffff00, needsSorting: true, weight: 0.49, radius: 1.5 },
     { type: 'cone', geometry: new THREE.ConeGeometry(1.5, 2, 32), color: 0x00ff00, needsSorting: true, weight: 0.49, radius: 1.5 },
-    { type: 'powerUpSlow', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x800080, weight: 0.005, radius: 1, effect: 'slow', label: 'Slow Conveyor' },
-    { type: 'powerUpSpeed', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ff00, weight: 0.005, radius: 1, effect: 'speed', label: 'Speed Boost' },
-    { type: 'powerUpExtraLife', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xffa500, weight: 0.005, radius: 1, effect: 'extraLife', label: 'Extra Life' },
-    { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, weight: 0.005, radius: 1, effect: 'freeze', label: 'Freeze' }
+    { type: 'powerUpSlow', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x800080, weight: 0.01, radius: 1, effect: 'slow', label: 'Slow Conveyor' },
+    { type: 'powerUpSpeed', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ff00, weight: 0.01, radius: 1, effect: 'speed', label: 'Speed Boost' },
+    { type: 'powerUpExtraLife', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xffa500, weight: 0.01, radius: 1, effect: 'extraLife', label: 'Extra Life' },
+    { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, weight: 0.01, radius: 1, effect: 'freeze', label: 'Freeze' }
 ];
 
 function getOffset(shape) {
@@ -313,25 +334,40 @@ function createItem() {
     const maxAttempts = 10;
 
     let conveyorChoice;
-    if (currentLevel >= 26 && currentLevel <= 35) {
+    if (currentLevel >= 26) {
         conveyorChoice = Math.random() < 0.5 ? 'left' : 'right';
+        let minZ, maxZ;
+        if (conveyorChoice === 'left') {
+            xPos = Math.random() * 10 - 12.5; // x = -12.5 to -2.5
+            minZ = (currentLevel >= 36 && currentLevel <= 45) ? -20 : -18;
+            maxZ = (currentLevel >= 36 && currentLevel <= 45) ? 20 : 20;
+        } else {
+            xPos = Math.random() * 10 + 2.5; // x = 2.5 to 12.5
+            minZ = -18;
+            maxZ = 20;
+        }
+        const direction = conveyorChoice === 'left' ? leftConveyorDirection : rightConveyorDirection;
+        const spawnZ = direction > 0 ? minZ : maxZ; // z=-20 for direction=1 (levels 36-45 left), z=20 otherwise
+        item.position.set(xPos, conveyorHeight + getOffset(shape), spawnZ);
+        item.userData.conveyor = conveyorChoice;
+        item.userData.direction = direction;
+        item.userData.endZ = direction > 0 ? maxZ : minZ; // z=20 for direction=1, z=-18 otherwise
     } else {
-        conveyorChoice = 'center';
+        xPos = Math.random() * 12 - 6; // x = -6 to 6
+        const minZ = -18;
+        const maxZ = 20;
+        const spawnZ = 20; // direction=-1
+        item.position.set(xPos, conveyorHeight + getOffset(shape), spawnZ);
+        item.userData.conveyor = 'center';
+        item.userData.direction = conveyorDirection;
+        item.userData.endZ = -18;
     }
 
     for (let attempts = 0; attempts < maxAttempts; attempts++) {
-        if (conveyorChoice === 'left') {
-            xPos = Math.random() * 10 - 12.5; // x = -12.5 to -2.5
-        } else if (conveyorChoice === 'right') {
-            xPos = Math.random() * 10 + 2.5; // x = 2.5 to 12.5
-        } else {
-            xPos = Math.random() * 12 - 6; // x = -6 to 6
-        }
-
         isOverlapping = items.some(existing => {
             if (existing.userData.isDragging) return false;
             const dx = xPos - existing.position.x;
-            const dz = 20 - existing.position.z;
+            const dz = item.position.z - existing.position.z;
             const distance = Math.sqrt(dx * dx + dz * dz);
             return distance < (shape.radius + (existing.geometry.type === 'BoxGeometry' ? 1.125 : existing.geometry.type === 'TetrahedronGeometry' ? 0.75 : existing.geometry.type === 'ConeGeometry' ? 1.5 : existing.geometry.type === 'IcosahedronGeometry' ? 1 : 1.5));
         });
@@ -339,8 +375,6 @@ function createItem() {
         if (attempts === maxAttempts - 1) return;
     }
     
-    const offset = getOffset(shape);
-    item.position.set(xPos, conveyorHeight + offset, 20); // Always spawn at z=20
     item.castShadow = true;
     item.receiveShadow = true;
     item.userData.needsSorting = shape.needsSorting || false;
@@ -389,7 +423,7 @@ function spawnPowerUp(type) {
     
     let xPos = Math.random() * 12 - 6;
     const offset = getOffset(shape);
-    item.position.set(xPos, conveyorHeight + offset, 20); // Always spawn at z=20
+    item.position.set(xPos, conveyorHeight + offset, 20); // Default spawn at z=20 for dev tools
     item.castShadow = true;
     item.receiveShadow = true;
     item.userData.effect = shape.effect;
@@ -506,7 +540,7 @@ function setupBins() {
                 bins.push({ color: 0x00ff00, mesh: bin4 });
             }
 
-            if (currentLevel >= 26 && currentLevel <= 35) {
+            if (currentLevel >= 26) {
                 bins[0].mesh.position.set(-15, 0.1, 0); // Red
                 bins[1].mesh.position.set(-15, 0.1, 4); // Blue
                 if (currentLevel >= 10) {
@@ -521,7 +555,7 @@ function setupBins() {
                 if (currentLevel >= 10) {
                     bins[2].mesh.position.set(12, 0.1, 4);
                 }
-                if (currentLevel >= 16 && currentLevel <= 25) {
+                if (currentLevel >= 16) {
                     bins[3].mesh.position.set(-12, 0.1, 4);
                 }
             }
@@ -570,7 +604,7 @@ function setupBins() {
                 bins.push({ color: 0x00ff00, mesh: bin4 });
             }
 
-            if (currentLevel >= 26 && currentLevel <= 35) {
+            if (currentLevel >= 26) {
                 bins[0].mesh.position.set(-15, 0.1, 0);
                 bins[1].mesh.position.set(-15, 0.1, 4);
                 if (currentLevel >= 10) {
@@ -585,7 +619,7 @@ function setupBins() {
                 if (currentLevel >= 10) {
                     bins[2].mesh.position.set(12, 0.1, 4);
                 }
-                if (currentLevel >= 16 && currentLevel <= 25) {
+                if (currentLevel >= 16) {
                     bins[3].mesh.position.set(-12, 0.1, 4);
                 }
             }
@@ -649,7 +683,9 @@ let topSortedPerLevel = {
     16: 0, 17: 0, 18: 0, 19: 0, 20: 0,
     21: 0, 22: 0, 23: 0, 24: 0, 25: 0,
     26: 0, 27: 0, 28: 0, 29: 0, 30: 0,
-    31: 0, 32: 0, 33: 0, 34: 0, 35: 0
+    31: 0, 32: 0, 33: 0, 34: 0, 35: 0,
+    36: 0, 37: 0, 38: 0, 39: 0, 40: 0,
+    41: 0, 42: 0, 43: 0, 44: 0, 45: 0
 };
 let isPaused = false;
 let isMutedSounds = localStorage.getItem('isMutedSounds') === 'true';
@@ -688,75 +724,24 @@ let powerUpsUsed = JSON.parse(localStorage.getItem('powerUpsUsed')) || {
 };
 let levelItemsSorted = 0;
 
+// NEW: Added variables for new achievements
+let currentRedStreak = 0;
+let currentBlueStreak = 0;
+let consecutiveLevelsNoLivesLost = 0;
+let powerUpsSortedThisLevel = 0;
+let redCubesSortedThisLevel = 0;
+let blueTrianglesSortedThisLevel = 0;
+let yellowSpheresSortedThisLevel = 0;
+let greenConesSortedThisLevel = 0;
+
 let levelUnlocks = JSON.parse(localStorage.getItem('levelUnlocks')) || {};
-for (let i = 2; i <= 35; i++) {
+for (let i = 2; i <= 60; i++) {
     if (!(i in levelUnlocks)) {
         levelUnlocks[i] = false;
     }
 }
 
 let unlockedAchievements = JSON.parse(localStorage.getItem('unlockedAchievements')) || {};
-
-const levelButtons = {
-    2: document.getElementById('level-2-button'),
-    3: document.getElementById('level-3-button'),
-    4: document.getElementById('level-4-button'),
-    5: document.getElementById('level-5-button'),
-    6: document.getElementById('level-6-button'),
-    7: document.getElementById('level-7-button'),
-    8: document.getElementById('level-8-button'),
-    9: document.getElementById('level-9-button'),
-    10: document.getElementById('level-10-button'),
-    11: document.getElementById('level-11-button'),
-    12: document.getElementById('level-12-button'),
-    13: document.getElementById('level-13-button'),
-    14: document.getElementById('level-14-button'),
-    15: document.getElementById('level-15-button'),
-    16: document.getElementById('level-16-button'),
-    17: document.getElementById('level-17-button'),
-    18: document.getElementById('level-18-button'),
-    19: document.getElementById('level-19-button'),
-    20: document.getElementById('level-20-button'),
-    21: document.getElementById('level-21-button'),
-    22: document.getElementById('level-22-button'),
-    23: document.getElementById('level-23-button'),
-    24: document.getElementById('level-24-button'),
-    25: document.getElementById('level-25-button'),
-    26: document.getElementById('level-26-button'),
-    27: document.getElementById('level-27-button'),
-    28: document.getElementById('level-28-button'),
-    29: document.getElementById('level-29-button'),
-    30: document.getElementById('level-30-button'),
-    31: document.getElementById('level-31-button'),
-    32: document.getElementById('level-32-button'),
-    33: document.getElementById('level-33-button'),
-    34: document.getElementById('level-34-button'),
-    35: document.getElementById('level-35-button'),
-    36: document.getElementById('level-36-button'),
-    37: document.getElementById('level-37-button'),
-    38: document.getElementById('level-38-button'),
-    39: document.getElementById('level-39-button'),
-    40: document.getElementById('level-40-button'),
-    41: document.getElementById('level-41-button'),
-    42: document.getElementById('level-42-button'),
-    43: document.getElementById('level-43-button'),
-    44: document.getElementById('level-44-button'),
-    45: document.getElementById('level-45-button')
-};
-for (let i = 2; i <= 45; i++) {
-    if (i <= 35) {
-        if (levelUnlocks[i]) {
-            levelButtons[i].textContent = `Level ${i}`;
-            levelButtons[i].disabled = false;
-        } else {
-            levelButtons[i].textContent = `Level ${i} (Locked)`;
-            levelButtons[i].disabled = true;
-        }
-    } else {
-        levelButtons[i].textContent = `Level ${i} (Coming Soon)`;
-        levelButtons[i].disabled = true;
-    }
-}
 
 let currentLevel = 1;
 let itemsNeeded = 15;
@@ -790,6 +775,8 @@ const startScreen = document.getElementById('start-screen');
 const levelSelectScreen = document.getElementById('level-select-screen');
 const levelSelectPage2 = document.getElementById('level-select-page-2');
 const levelSelectPage3 = document.getElementById('level-select-page-3');
+const levelSelectPage4 = document.getElementById('level-select-page-4');
+const levelSelectPage5 = document.getElementById('level-select-page-5');
 const gameUI = document.getElementById('game-ui');
 const pauseScreen = document.getElementById('pause-screen');
 const settingsScreen = document.getElementById('settings-screen');
@@ -831,8 +818,42 @@ totalSortedDisplay.textContent = totalItemsSorted;
 redSortedDisplay.textContent = redCubesSorted;
 blueSortedDisplay.textContent = blueTrianglesSorted;
 yellowSortedDisplay.textContent = yellowSpheresSorted;
+greenSortedDisplay.textContent = greenConesSorted;
 levelsFailedDisplay.textContent = levelsFailed;
-totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(1);
+totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(2); // Updated to 2 decimal places
+
+// New Function: Update Level Buttons
+function updateLevelButtons() {
+    for (let i = 2; i <= 60; i++) {
+        const button = document.getElementById(`level-${i}-button`);
+        if (button) {
+            if (levelUnlocks[i]) {
+                button.textContent = `Level ${i}`;
+                button.disabled = false;
+            } else {
+                button.textContent = i <= 15 ? `Level ${i} (Locked)` : `Level ${i} (Coming Soon)`;
+                button.disabled = true;
+            }
+        }
+    }
+}
+
+// Call updateLevelButtons initially to set the correct states
+updateLevelButtons();
+
+// Initialize level buttons (this block is now redundant due to updateLevelButtons, but kept for consistency)
+for (let i = 2; i <= 60; i++) {
+    const button = document.getElementById(`level-${i}-button`);
+    if (button) {
+        if (levelUnlocks[i]) {
+            button.textContent = `Level ${i}`;
+            button.disabled = false;
+        } else {
+            button.textContent = i <= 15 ? `Level ${i} (Locked)` : `Level ${i} (Coming Soon)`;
+            button.disabled = true;
+        }
+    }
+}
 
 function addButtonListeners(elementId, action) {
     const element = document.getElementById(elementId);
@@ -858,6 +879,7 @@ addButtonListeners('level-select-button', () => {
     console.log('Level select button clicked/touched');
     startScreen.style.display = 'none';
     levelSelectScreen.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing level select screen
 });
 
 addButtonListeners('level-1-button', () => {
@@ -880,7 +902,7 @@ addButtonListeners('back-to-start-from-updates', () => {
     startScreen.style.display = 'block';
 });
 
-for (let i = 2; i <= 35; i++) {
+for (let i = 2; i <= 60; i++) {
     addButtonListeners(`level-${i}-button`, () => {
         if (levelUnlocks[i]) {
             console.log(`Level ${i} button clicked/touched`);
@@ -890,8 +912,10 @@ for (let i = 2; i <= 35; i++) {
                 levelSelectScreen.style.display = 'none';
             } else if (i <= 30) {
                 levelSelectPage2.style.display = 'none';
-            } else {
+            } else if (i <= 45) {
                 levelSelectPage3.style.display = 'none';
+            } else {
+                levelSelectPage4.style.display = 'none';
             }
             levelStartScreen.style.display = 'block';
         }
@@ -908,24 +932,42 @@ addButtonListeners('next-page-button', () => {
     console.log('Next page button clicked/touched');
     levelSelectScreen.style.display = 'none';
     levelSelectPage2.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 2
 });
 
 addButtonListeners('prev-page-button', () => {
     console.log('Previous page button clicked/touched');
     levelSelectPage2.style.display = 'none';
     levelSelectScreen.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 1
 });
 
 addButtonListeners('next-page-button-page-2', () => {
     console.log('Next page from page 2 clicked/touched');
     levelSelectPage2.style.display = 'none';
     levelSelectPage3.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 3
 });
 
 addButtonListeners('prev-page-button-page-3', () => {
     console.log('Previous page from page 3 clicked/touched');
     levelSelectPage3.style.display = 'none';
     levelSelectPage2.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 2
+});
+
+addButtonListeners('next-page-button-page-3', () => {
+    console.log('Next page from page 3 clicked/touched');
+    levelSelectPage3.style.display = 'none';
+    levelSelectPage4.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 4
+});
+
+addButtonListeners('prev-page-button-page-4', () => {
+    console.log('Previous page from page 4 clicked/touched');
+    levelSelectPage4.style.display = 'none';
+    levelSelectPage3.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 3
 });
 
 addButtonListeners('back-to-start-page-2', () => {
@@ -937,6 +979,12 @@ addButtonListeners('back-to-start-page-2', () => {
 addButtonListeners('back-to-start-page-3', () => {
     console.log('Back to start from page 3 clicked/touched');
     levelSelectPage3.style.display = 'none';
+    startScreen.style.display = 'block';
+});
+
+addButtonListeners('back-to-start-page-4', () => {
+    console.log('Back to start from page 4 clicked/touched');
+    levelSelectPage4.style.display = 'none';
     startScreen.style.display = 'block';
 });
 
@@ -974,7 +1022,7 @@ addButtonListeners('stats-button', () => {
     yellowSortedDisplay.textContent = yellowSpheresSorted;
     greenSortedDisplay.textContent = greenConesSorted;
     levelsFailedDisplay.textContent = levelsFailed;
-    totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(1);
+    totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(2); // Updated to 2 decimal places
 });
 
 addButtonListeners('achievements-button', () => {
@@ -1039,7 +1087,16 @@ addButtonListeners('start-next-level', () => {
 addButtonListeners('back-to-level-select', () => {
     console.log('Back to level select clicked/touched');
     levelCompleteScreen.style.display = 'none';
-    levelSelectScreen.style.display = 'block';
+    if (currentLevel <= 15) {
+        levelSelectScreen.style.display = 'block';
+    } else if (currentLevel <= 30) {
+        levelSelectPage2.style.display = 'block';
+    } else if (currentLevel <= 45) {
+        levelSelectPage3.style.display = 'block';
+    } else {
+        levelSelectPage4.style.display = 'block';
+    }
+    updateLevelButtons(); // Update buttons when returning to level select
 });
 
 addButtonListeners('settings-from-level-complete', () => {
@@ -1114,7 +1171,7 @@ addButtonListeners('reset-game-data', () => {
     console.log('Reset game data button clicked/touched');
     if (confirm('Are you sure you want to reset all game data? This will reset level progress, stats, and achievements.')) {
         levelUnlocks = {};
-        for (let i = 2; i <= 35; i++) {
+        for (let i = 2; i <= 60; i++) {
             levelUnlocks[i] = false;
         }
         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
@@ -1152,9 +1209,12 @@ addButtonListeners('reset-game-data', () => {
         localStorage.setItem('totalPowerUpsCollected', 0);
         localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
 
-        for (let i = 2; i <= 35; i++) {
-            levelButtons[i].textContent = `Level ${i} (Locked)`;
-            levelButtons[i].disabled = true;
+        for (let i = 2; i <= 60; i++) {
+            const button = document.getElementById(`level-${i}-button`);
+            if (button) {
+                button.textContent = i <= 15 ? `Level ${i} (Locked)` : `Level ${i} (Coming Soon)`;
+                button.disabled = true;
+            }
         }
         totalSortedDisplay.textContent = totalItemsSorted;
         redSortedDisplay.textContent = redCubesSorted;
@@ -1162,7 +1222,7 @@ addButtonListeners('reset-game-data', () => {
         yellowSortedDisplay.textContent = yellowSpheresSorted;
         greenSortedDisplay.textContent = greenConesSorted;
         levelsFailedDisplay.textContent = levelsFailed;
-        totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(1);
+        totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(2); // Updated to 2 decimal places
         updateAchievementsList();
 
         topSortedPerLevel = {
@@ -1172,7 +1232,9 @@ addButtonListeners('reset-game-data', () => {
             16: 0, 17: 0, 18: 0, 19: 0, 20: 0,
             21: 0, 22: 0, 23: 0, 24: 0, 25: 0,
             26: 0, 27: 0, 28: 0, 29: 0, 30: 0,
-            31: 0, 32: 0, 33: 0, 34: 0, 35: 0
+            31: 0, 32: 0, 33: 0, 34: 0, 35: 0,
+            36: 0, 37: 0, 38: 0, 39: 0, 40: 0,
+            41: 0, 42: 0, 43: 0, 44: 0, 45: 0
         };
 
         alert('Game data has been reset.');
@@ -1206,10 +1268,13 @@ addButtonListeners('dev-tools-button', () => {
 
 addButtonListeners('unlock-all-button', () => {
     console.log('Unlock all button clicked/touched');
-    for (let i = 2; i <= 35; i++) {
+    for (let i = 2; i <= 60; i++) {
         levelUnlocks[i] = true;
-        levelButtons[i].textContent = `Level ${i}`;
-        levelButtons[i].disabled = false;
+        const button = document.getElementById(`level-${i}-button`);
+        if (button) {
+            button.textContent = `Level ${i}`;
+            button.disabled = false;
+        }
     }
     localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
     console.log('All levels unlocked');
@@ -1302,9 +1367,12 @@ addButtonListeners('back-to-level-select-from-start', () => {
         levelSelectScreen.style.display = 'block';
     } else if (selectedLevel <= 30) {
         levelSelectPage2.style.display = 'block';
-    } else {
+    } else if (selectedLevel <= 45) {
         levelSelectPage3.style.display = 'block';
+    } else {
+        levelSelectPage4.style.display = 'block';
     }
+    updateLevelButtons(); // Update buttons when returning to level select from start screen
 });
 
 addButtonListeners('back-to-main-menu-from-start', () => {
@@ -1322,6 +1390,26 @@ addButtonListeners('back-to-main-menu', () => {
 addButtonListeners('restart-button', () => {
     console.log('Restart button clicked/touched');
     restartGame();
+});
+
+addButtonListeners('next-page-button-page-4', () => {
+    console.log('Next page from page 4 clicked/touched');
+    levelSelectPage4.style.display = 'none';
+    levelSelectPage5.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 5
+});
+
+addButtonListeners('prev-page-button-page-5', () => {
+    console.log('Previous page from page 5 clicked/touched');
+    levelSelectPage5.style.display = 'none';
+    levelSelectPage4.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 4
+});
+
+addButtonListeners('back-to-start-page-5', () => {
+    console.log('Back to start from page 5 clicked/touched');
+    levelSelectPage5.style.display = 'none';
+    startScreen.style.display = 'block';
 });
 
 // Achievement Functions
@@ -1349,7 +1437,30 @@ const achievements = [
     { id: "shape_specialist", name: "Shape Specialist", description: "Sort 50 of any single shape", difficulty: "easy" },
     { id: "color_specialist", name: "Color Specialist", description: "Sort 50 items of any single color", difficulty: "easy" },
     { id: "lucky_sorter", name: "Lucky Sorter", description: "Sort an item correctly on the first try in a level", difficulty: "easy" },
-    { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once", difficulty: "hard" }
+    { id: "power_up_master", name: "Power-Up Master", description: "Use each type of power-up at least once", difficulty: "hard" },
+    // NEW: Added new achievements
+    { id: "level_1_no_lives_lost", name: "Level 1 Survivor", description: "Complete level 1 without losing any lives", difficulty: "easy" },
+    { id: "sort_10_in_level", name: "Deca Sorter", description: "Sort 10 items in a single level", difficulty: "easy" },
+    { id: "first_slow_powerup", name: "Slow Starter", description: "Use the 'Slow Conveyor' power-up for the first time", difficulty: "easy" },
+    { id: "five_red_in_row", name: "Red Streak", description: "Sort 5 red cubes in a row", difficulty: "easy" },
+    { id: "five_blue_in_row", name: "Blue Streak", description: "Sort 5 blue triangles in a row", difficulty: "easy" },
+    { id: "sort_20_in_row", name: "Twenty in a Row", description: "Sort 20 items in a row without mistakes", difficulty: "medium" },
+    { id: "three_levels_no_lives_lost", name: "Triple Survivor", description: "Complete 3 levels in a row without losing any lives", difficulty: "medium" },
+    { id: "all_powerups_in_level", name: "Power-Up Master", description: "Use all types of power-ups in a single level", difficulty: "medium" },
+    { id: "complete_with_one_life", name: "Close Call", description: "Complete a level with only one life remaining", difficulty: "medium" },
+    { id: "sort_100_in_level", name: "Century Sorter", description: "Sort 100 items in a single level", difficulty: "hard" },
+    { id: "level_10_no_powerups", name: "Purist", description: "Complete level 10 without using any power-ups", difficulty: "hard" },
+    { id: "sort_50_in_row", name: "Unstoppable", description: "Sort 50 items in a row without mistakes", difficulty: "hard" },
+    { id: "complete_level_under_1_min", name: "Minute Master", description: "Complete a level in under 1 minute", difficulty: "hard" },
+    { id: "sort_10_powerups_in_level", name: "Power-Up Collector", description: "Sort 10 power-ups in a single level", difficulty: "hard" },
+    { id: "five_levels_no_lives_lost", name: "Quintuple Survivor", description: "Complete 5 levels in a row without losing any lives", difficulty: "hard" },
+    { id: "sort_20_red_in_level", name: "Red Specialist", description: "Sort 20 red cubes in a single level", difficulty: "hard" },
+    { id: "sort_20_blue_in_level", name: "Blue Specialist", description: "Sort 20 blue triangles in a single level", difficulty: "hard" },
+    { id: "sort_20_yellow_in_level", name: "Yellow Specialist", description: "Sort 20 yellow spheres in a single level", difficulty: "hard" },
+    { id: "sort_20_green_in_level", name: "Green Specialist", description: "Sort 20 green cones in a single level", difficulty: "hard" },
+    { id: "all_levels_no_lives_lost", name: "Invincible", description: "Complete all levels without losing any lives", difficulty: "expert" },
+    { id: "score_1000_in_level", name: "High Scorer", description: "Achieve a score of 1000 in a single level", difficulty: "expert" },
+    { id: "sort_500_total", name: "Grand Master Sorter", description: "Sort 500 items in total", difficulty: "expert" }
 ];
 
 let currentDifficulty = "easy";
@@ -1371,6 +1482,8 @@ function checkSortingAchievements() {
     if (blueTrianglesSorted >= 25) unlockAchievement("blue_expert");
     if (yellowSpheresSorted >= 25) unlockAchievement("yellow_pro");
     if (greenConesSorted >= 25) unlockAchievement("green_guru");
+    // NEW: Check for total items sorted achievement
+    if (totalItemsSorted >= 500) unlockAchievement("sort_500_total");
 }
 
 function updateAchievementsList() {
@@ -1441,30 +1554,39 @@ function resetGameState() {
     firstSortInLevel = true;
     powerUpsUsedThisLevel.clear();
     levelItemsSorted = 0;
+    // NEW: Reset new per-level variables
+    currentRedStreak = 0;
+    currentBlueStreak = 0;
+    powerUpsSortedThisLevel = 0;
+    redCubesSortedThisLevel = 0;
+    blueTrianglesSortedThisLevel = 0;
+    yellowSpheresSortedThisLevel = 0;
+    greenConesSortedThisLevel = 0;
 }
 
 function startGame(level) {
     console.log(`Starting level ${level}`);
     currentLevel = level;
     levelDisplay.textContent = `Level ${currentLevel}`;
-    itemsNeeded = level === 1 ? 15 : level === 2 ? 20 : level === 3 ? 25 : level === 4 ? 30 : level === 5 ? 35 :
-                  level === 6 ? 40 : level === 7 ? 45 : level === 8 ? 50 : level === 9 ? 55 : level === 10 ? 60 :
-                  level === 11 ? 65 : level === 12 ? 70 : level === 13 ? 75 : level === 14 ? 80 : level === 15 ? 85 :
-                  level === 16 ? 90 : level === 17 ? 95 : level === 18 ? 100 : level === 19 ? 105 : level === 20 ? 110 :
-                  level === 21 ? 115 : level === 22 ? 120 : level === 23 ? 125 : level === 24 ? 130 : level === 25 ? 135 :
-                  level === 26 ? 140 : level === 27 ? 145 : level === 28 ? 150 : level === 29 ? 155 : level === 30 ? 160 :
-                  level === 31 ? 165 : level === 32 ? 170 : level === 33 ? 175 : level === 34 ? 180 : level === 35 ? 185 : 15;
-    baseConveyorSpeed = level === 1 ? 0.02 : level === 2 ? 0.025 : level === 3 ? 0.028 : level === 4 ? 0.031 : level === 5 ? 0.034 :
-                        level === 6 ? 0.037 : level === 7 ? 0.040 : level === 8 ? 0.043 : level === 9 ? 0.046 : level === 10 ? 0.049 :
-                        level === 11 ? 0.052 : level === 12 ? 0.055 : level === 13 ? 0.058 : level === 14 ? 0.061 : level === 15 ? 0.064 :
-                        level === 16 ? 0.067 : level === 17 ? 0.070 : level === 18 ? 0.073 : level === 19 ? 0.076 : level === 20 ? 0.079 :
-                        level === 21 ? 0.082 : level === 22 ? 0.085 : level === 23 ? 0.088 : level === 24 ? 0.091 : level === 25 ? 0.094 :
-                        level === 26 ? 0.097 : level === 27 ? 0.100 : level === 28 ? 0.103 : level === 29 ? 0.106 : level === 30 ? 0.109 :
-                        level === 31 ? 0.112 : level === 32 ? 0.115 : level === 33 ? 0.118 : level === 34 ? 0.121 : level === 35 ? 0.124 : 0.02;
+    if (level >= 36 && level <= 45) {
+        itemsNeeded = 110 + (level - 36) * 10;
+    } else {
+        itemsNeeded = 15 + (level - 1) * 5;
+    }
+    baseConveyorSpeed = level === 1 ? 0.02 : 0.025 + (level - 2) * 0.003;
     if (currentLevel >= 26 && currentLevel <= 35) {
-        baseConveyorSpeed *= 0.5; // Reduce speed by 50% for levels 26-35
+        baseConveyorSpeed *= 0.5;
     }
     conveyorSpeed = baseConveyorSpeed;
+    if (currentLevel >= 26 && currentLevel <= 35) {
+        leftConveyorDirection = -1;
+        rightConveyorDirection = -1;
+    } else if (currentLevel >= 36 && currentLevel <= 45) {
+        leftConveyorDirection = 1; // Reverse direction for left conveyor
+        rightConveyorDirection = -1;
+    } else {
+        conveyorDirection = -1;
+    }
     neededTotalDisplay.textContent = itemsNeeded;
     completedLevelDisplay.textContent = currentLevel;
     nextLevelDisplay.textContent = currentLevel + 1;
@@ -1492,6 +1614,7 @@ function cleanupBins() {
 function togglePause() {
     isPaused = !isPaused;
     if (isPaused) {
+        localStorage.setItem('totalPlayTime', totalPlayTime); // Save totalPlayTime when pausing
         if (spawnInterval) {
             clearInterval(spawnInterval);
             spawnInterval = null;
@@ -1499,7 +1622,6 @@ function togglePause() {
         pauseScreen.style.display = 'block';
         pauseResumeButton.textContent = 'Resume';
         gameMusic.pause();
-        localStorage.setItem('totalPlayTime', totalPlayTime);
     } else {
         startSpawning();
         pauseScreen.style.display = 'none';
@@ -1539,7 +1661,7 @@ function cleanupGame() {
     items.length = 0;
     particles.forEach(particle => scene.remove(particle));
     particles.length = 0;
-    localStorage.setItem('totalPlayTime', totalPlayTime);
+    localStorage.setItem('totalPlayTime', totalPlayTime); // Save totalPlayTime when cleaning up
 }
 
 function restartGame() {
@@ -1641,6 +1763,8 @@ function onEnd(event) {
                             }
                             powerUpsUsed.slow = true;
                             powerUpsUsedThisLevel.add('slow');
+                            // NEW: Unlock Slow Starter achievement on first use
+                            unlockAchievement("first_slow_powerup");
                         } else if (sortedItem.userData.effect === 'speed') {
                             const existingSpeed = activePowerUps.find(p => p.effect === 'speed');
                             if (existingSpeed) {
@@ -1672,6 +1796,11 @@ function onEnd(event) {
                         totalPowerUpsCollected++;
                         localStorage.setItem('totalPowerUpsCollected', totalPowerUpsCollected);
                         localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
+                        // NEW: Increment power-ups sorted this level
+                        powerUpsSortedThisLevel++;
+                        if (powerUpsSortedThisLevel >= 10) unlockAchievement("sort_10_powerups_in_level");
+                        // NEW: Check for all power-ups in a level
+                        if (powerUpsUsedThisLevel.size >= 4) unlockAchievement("all_powerups_in_level");
                         
                         if (totalPowerUpsCollected >= 10) unlockAchievement("power_up_collector");
                         if (powerUpsUsed.slow && powerUpsUsed.speed && powerUpsUsed.extraLife && powerUpsUsed.freeze) unlockAchievement("power_up_master");
@@ -1691,6 +1820,9 @@ function onEnd(event) {
                             }
                             currentStreak++;
                             if (currentStreak >= 10) unlockAchievement("combo_king");
+                            // NEW: Check streak achievements
+                            if (currentStreak >= 20) unlockAchievement("sort_20_in_row");
+                            if (currentStreak >= 50) unlockAchievement("sort_50_in_row");
                         });
                         unlockAchievement("power_up_user");
                     } else if (sortedItem.userData.needsSorting) {
@@ -1701,6 +1833,7 @@ function onEnd(event) {
                                 const index = items.indexOf(sortedItem);
                                 if (index !== -1) items.splice(index, 1);
                                 sortCount++;
+                                console.log('Sorted item, sortCount =', sortCount, 'itemsNeeded =', itemsNeeded); // Added console log
                                 totalItemsSorted++;
                                 sessionItemsSorted++;
                                 levelItemsSorted++;
@@ -1711,6 +1844,12 @@ function onEnd(event) {
                                     localStorage.setItem('redCubesSorted', redCubesSorted);
                                     localStorage.setItem('shape_cube', shapeCounts.cube);
                                     localStorage.setItem('color_red', colorCounts[0xff0000]);
+                                    // NEW: Handle red cube streak and level count
+                                    redCubesSortedThisLevel++;
+                                    currentRedStreak++;
+                                    if (currentRedStreak >= 5) unlockAchievement("five_red_in_row");
+                                    currentBlueStreak = 0;
+                                    if (redCubesSortedThisLevel >= 20) unlockAchievement("sort_20_red_in_level");
                                 } else if (sortedItem.userData.type === 'triangle') {
                                     blueTrianglesSorted++;
                                     shapeCounts.triangle++;
@@ -1718,6 +1857,12 @@ function onEnd(event) {
                                     localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
                                     localStorage.setItem('shape_triangle', shapeCounts.triangle);
                                     localStorage.setItem('color_blue', colorCounts[0x0000ff]);
+                                    // NEW: Handle blue triangle streak and level count
+                                    blueTrianglesSortedThisLevel++;
+                                    currentBlueStreak++;
+                                    if (currentBlueStreak >= 5) unlockAchievement("five_blue_in_row");
+                                    currentRedStreak = 0;
+                                    if (blueTrianglesSortedThisLevel >= 20) unlockAchievement("sort_20_blue_in_level");
                                 } else if (sortedItem.userData.type === 'sphere') {
                                     yellowSpheresSorted++;
                                     shapeCounts.sphere++;
@@ -1725,6 +1870,9 @@ function onEnd(event) {
                                     localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
                                     localStorage.setItem('shape_sphere', shapeCounts.sphere);
                                     localStorage.setItem('color_yellow', colorCounts[0xffff00]);
+                                    // NEW: Handle yellow sphere level count
+                                    yellowSpheresSortedThisLevel++;
+                                    if (yellowSpheresSortedThisLevel >= 20) unlockAchievement("sort_20_yellow_in_level");
                                 } else if (sortedItem.userData.type === 'cone') {
                                     greenConesSorted++;
                                     shapeCounts.cone++;
@@ -1732,6 +1880,9 @@ function onEnd(event) {
                                     localStorage.setItem('greenConesSorted', greenConesSorted);
                                     localStorage.setItem('shape_cone', shapeCounts.cone);
                                     localStorage.setItem('color_green', colorCounts[0x00ff00]);
+                                    // NEW: Handle green cone level count
+                                    greenConesSortedThisLevel++;
+                                    if (greenConesSortedThisLevel >= 20) unlockAchievement("sort_20_green_in_level");
                                 }
                                 localStorage.setItem('totalItemsSorted', totalItemsSorted);
                                 checkSortingAchievements();
@@ -1745,6 +1896,9 @@ function onEnd(event) {
                                 }
                                 currentStreak++;
                                 if (currentStreak >= 10) unlockAchievement("combo_king");
+                                // NEW: Check streak achievements
+                                if (currentStreak >= 20) unlockAchievement("sort_20_in_row");
+                                if (currentStreak >= 50) unlockAchievement("sort_50_in_row");
 
                                 sortedShapesThisLevel.add(sortedItem.userData.type);
                                 const currentColor = sortedItem.material.color.getHex();
@@ -1775,22 +1929,39 @@ function onEnd(event) {
                                         break;
                                     }
                                 }
+                                // NEW: Check per-level sorting achievements
+                                if (sortCount >= 10) unlockAchievement("sort_10_in_level");
+                                if (sortCount >= 100) unlockAchievement("sort_100_in_level");
+                                if (sortCount >= 1000) unlockAchievement("score_1000_in_level");
 
                                 if (sortCount >= itemsNeeded) {
+                                    console.log('Condition met, showing end level button'); // Added console log
                                     const timeElapsed = (Date.now() - levelStartTime) / 1000;
                                     if (timeElapsed < 60) unlockAchievement("speed_runner");
                                     if (timeElapsed < 120) unlockAchievement("speed_demon");
                                     if (!mistakesMade) unlockAchievement("perfectionist");
                                     if (lives === 3) unlockAchievement("survivor");
                                     if (currentLevel === 10) unlockAchievement("level_conqueror");
-                                    if (currentLevel === 35) unlockAchievement("master_sorter");
-                                    if (currentLevel < 35) {
+                                    if (currentLevel === 45) unlockAchievement("master_sorter");
+                                    // NEW: Level-specific and consecutive level achievements
+                                    if (currentLevel == 1 && lives == 3) unlockAchievement("level_1_no_lives_lost");
+                                    if (lives == 3) {
+                                        consecutiveLevelsNoLivesLost++;
+                                        if (consecutiveLevelsNoLivesLost >= 3) unlockAchievement("three_levels_no_lives_lost");
+                                        if (consecutiveLevelsNoLivesLost >= 5) unlockAchievement("five_levels_no_lives_lost");
+                                    } else {
+                                        consecutiveLevelsNoLivesLost = 0;
+                                    }
+                                    if (currentLevel == 10 && powerUpsUsedThisLevel.size == 0) unlockAchievement("level_10_no_powerups");
+                                    if (lives == 1) unlockAchievement("complete_with_one_life");
+                                    if (timeElapsed < 60) unlockAchievement("complete_level_under_1_min");
+                                    // Note: "all_levels_no_lives_lost" is checked but may need refinement
+                                    if (currentLevel === 45 && levelsFailed === 0) unlockAchievement("all_levels_no_lives_lost");
+
+                                    if (currentLevel < 45) {
                                         levelUnlocks[currentLevel + 1] = true;
                                         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
-                                        if (levelButtons[currentLevel + 1]) {
-                                            levelButtons[currentLevel + 1].textContent = `Level ${currentLevel + 1}`;
-                                            levelButtons[currentLevel + 1].disabled = false;
-                                        }
+                                        // Removed reference to levelButtons
                                     }
                                     endLevelButton.style.display = 'block';
                                     if (!isMutedSounds) {
@@ -1857,6 +2028,9 @@ renderer.domElement.addEventListener('touchend', onEnd, { passive: false });
 function loseLife() {
     mistakesMade = true;
     currentStreak = 0;
+    // NEW: Reset type-specific streaks
+    currentRedStreak = 0;
+    currentBlueStreak = 0;
     lives--;
     livesText.textContent = `Lives: ${lives}`;
     if (lives >= 0) hearts[lives].classList.add('lost');
@@ -1904,12 +2078,15 @@ function animatePowerUp(item, type, callback) {
 }
 
 let lastTime = 0;
-let textureOffset = 0;
 function animate(timestamp) {
     requestAnimationFrame(animate);
     
     const delta = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
+
+    if (!isPaused) {
+        totalPlayTime += delta; // Accumulate totalPlayTime when game is not paused
+    }
 
     if (!isPaused && beltMaterial && beltMaterial.map) {
         conveyorSpeed = baseConveyorSpeed;
@@ -1935,17 +2112,20 @@ function animate(timestamp) {
             updatePowerUpStatus();
         }
         
-        textureOffset -= conveyorSpeed;
         conveyorBelts.forEach(belt => {
-            belt.material.map.offset.y = textureOffset % 1;
+            const textureDirectionMultiplier = belt.userData.textureDirectionMultiplier || 1;
+            const textureOffsetUpdate = textureDirectionMultiplier * belt.userData.direction * conveyorSpeed;
+            belt.userData.textureOffset += textureOffsetUpdate;
+            belt.material.map.offset.y = belt.userData.textureOffset % 1;
         });
 
         const toRemove = [];
         items.forEach((item, index) => {
             if (!item.userData.isDragging) {
-                item.position.z -= conveyorSpeed;
+                const speed = conveyorSpeed;
+                item.position.z += (item.userData.direction > 0 ? 1 : -1) * speed;
                 item.rotation.y += 0.02;
-                if (item.position.z < -18) {
+                if ((item.userData.direction > 0 && item.position.z > item.userData.endZ) || (item.userData.direction < 0 && item.position.z < item.userData.endZ)) {
                     toRemove.push(index);
                 } else {
                     updatePowerUpTextPosition(item);
