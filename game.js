@@ -735,7 +735,7 @@ let yellowSpheresSortedThisLevel = 0;
 let greenConesSortedThisLevel = 0;
 
 let levelUnlocks = JSON.parse(localStorage.getItem('levelUnlocks')) || {};
-for (let i = 2; i <= 60; i++) {
+for (let i = 2; i <= 45; i++) { // Changed from 60 to 45
     if (!(i in levelUnlocks)) {
         levelUnlocks[i] = false;
     }
@@ -824,14 +824,19 @@ totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(2); // Upda
 
 // New Function: Update Level Buttons
 function updateLevelButtons() {
-    for (let i = 2; i <= 60; i++) {
+    for (let i = 2; i <= 75; i++) { // Changed from 60 to 75 to cover all HTML buttons
         const button = document.getElementById(`level-${i}-button`);
         if (button) {
-            if (levelUnlocks[i]) {
-                button.textContent = `Level ${i}`;
-                button.disabled = false;
+            if (i <= 45) {
+                if (levelUnlocks[i]) {
+                    button.textContent = `Level ${i}`;
+                    button.disabled = false;
+                } else {
+                    button.textContent = `Level ${i} (Locked)`;
+                    button.disabled = true;
+                }
             } else {
-                button.textContent = i <= 15 ? `Level ${i} (Locked)` : `Level ${i} (Coming Soon)`;
+                button.textContent = `Level ${i} (Coming Soon)`;
                 button.disabled = true;
             }
         }
@@ -902,7 +907,7 @@ addButtonListeners('back-to-start-from-updates', () => {
     startScreen.style.display = 'block';
 });
 
-for (let i = 2; i <= 60; i++) {
+for (let i = 2; i <= 45; i++) { // Changed from 60 to 45
     addButtonListeners(`level-${i}-button`, () => {
         if (levelUnlocks[i]) {
             console.log(`Level ${i} button clicked/touched`);
@@ -914,8 +919,6 @@ for (let i = 2; i <= 60; i++) {
                 levelSelectPage2.style.display = 'none';
             } else if (i <= 45) {
                 levelSelectPage3.style.display = 'none';
-            } else {
-                levelSelectPage4.style.display = 'none';
             }
             levelStartScreen.style.display = 'block';
         }
@@ -1171,7 +1174,7 @@ addButtonListeners('reset-game-data', () => {
     console.log('Reset game data button clicked/touched');
     if (confirm('Are you sure you want to reset all game data? This will reset level progress, stats, and achievements.')) {
         levelUnlocks = {};
-        for (let i = 2; i <= 60; i++) {
+        for (let i = 2; i <= 45; i++) { // Changed from 60 to 45
             levelUnlocks[i] = false;
         }
         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
@@ -1209,11 +1212,16 @@ addButtonListeners('reset-game-data', () => {
         localStorage.setItem('totalPowerUpsCollected', 0);
         localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
 
-        for (let i = 2; i <= 60; i++) {
+        for (let i = 2; i <= 75; i++) { // Changed from 60 to 75
             const button = document.getElementById(`level-${i}-button`);
             if (button) {
-                button.textContent = i <= 15 ? `Level ${i} (Locked)` : `Level ${i} (Coming Soon)`;
-                button.disabled = true;
+                if (i <= 45) {
+                    button.textContent = `Level ${i} (Locked)`;
+                    button.disabled = true;
+                } else {
+                    button.textContent = `Level ${i} (Coming Soon)`;
+                    button.disabled = true;
+                }
             }
         }
         totalSortedDisplay.textContent = totalItemsSorted;
@@ -1268,7 +1276,7 @@ addButtonListeners('dev-tools-button', () => {
 
 addButtonListeners('unlock-all-button', () => {
     console.log('Unlock all button clicked/touched');
-    for (let i = 2; i <= 60; i++) {
+    for (let i = 2; i <= 45; i++) { // Changed from 60 to 45
         levelUnlocks[i] = true;
         const button = document.getElementById(`level-${i}-button`);
         if (button) {
