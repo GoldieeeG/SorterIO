@@ -25,6 +25,39 @@ body {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
+#power-ups-screen ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#power-ups-screen li {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1); /* Matches achievements semi-transparent background */
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline matching achievements */
+}
+
+#power-ups-screen li:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+}
+
+#power-ups-screen img {
+    margin-right: 10px;
+    width: 50px;
+    height: 50px;
+}
+
+#power-ups-screen li strong {
+    color: #ffd700; /* Gold color */
+    font-weight: bold;
+}
+
 #start-screen .columns {
     display: flex;
     justify-content: center;
@@ -48,6 +81,13 @@ body {
     margin: 0 0 25px;
     font-family: 'Orbitron', sans-serif;
     font-size: 36px;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
+}
+
+#power-ups-screen h2 {
+    margin: 0 0 25px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 48px; /* Increased for prominence */
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 
@@ -488,7 +528,7 @@ body {
 
 #updates-screen li {
     margin: 10px 0;
-    font-size: 18px;
+    font-size: 16px;
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 

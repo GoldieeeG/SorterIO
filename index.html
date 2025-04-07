@@ -38,7 +38,7 @@
                  data-ad-format="auto"></ins>
         </div>
         <p>Created by Goldie 2025</p>
-        <p id="version-text">Alpha v0.41</p>
+        <p id="version-text">Alpha v0.42</p>
     </div>
     <div id="stats-screen" style="display: none;">
         <h2>Player Stats</h2>
@@ -50,6 +50,8 @@
             <li class="stat-item">Green Cones Sorted: <span id="green-sorted">0</span></li>
             <li class="stat-item">Levels Failed: <span id="levels-failed">0</span></li>
             <li class="stat-item">Total Hours Played: <span id="total-hours-played">0.00</span></li>
+            <li class="stat-item">Player Level: <span id="player-level">1</span></li>
+            <li class="stat-item">XP to Next Level: <span id="xp-to-next">0 / 100</span></li>
         </ul>
         <button id="back-to-start-from-stats">Back</button>
     </div>
@@ -79,7 +81,7 @@
                     <li>Added Updates Section</li>
                 </ul>
             </li>
-            <li><span class="update-version">Update v0.41</span> -
+            <li><span class="update-version">Update v0.42</span> -
                 <ul>
                     <li>Increased spawn rates for all powerups.</li>
                     <li>Added levels up to 45. Reduced amount of items required to pass level 36-45.</li>
@@ -87,6 +89,13 @@
                     <li>Added more achievements</li>
                     <li>Visual enchancements, UI Upgrades.</li>
                     <li>Fixed an issue causing hours played to not be logged in stats properly.</li>
+                </ul>
+            </li>
+            <li><span class="update-version">Update v0.42</span> -
+                <ul>
+                    <li>Added level progression to the game, Max Level 100 at this time.</li>
+                    <li>More visual enchancements</li>
+                    <li>Increased all power up spawn rates by 1%.</li>
                 </ul>
             </li>
         </ul>
@@ -270,7 +279,9 @@
             Top Sorted: <span id="top-sorted-count">0</span>
         </div>
         <div id="power-up-status" style="display: none;"></div>
-        <div id="version-container">Alpha v0.41</div>
+        <div id="player-level-display">Level: 1</div>
+        <div id="xp-display">XP: 0 / 100</div>
+        <div id="version-container">Alpha v0.42</div>
         <button id="restart-button">Restart Game</button>
         <button id="pause-resume-button">Pause</button>
         <button id="end-level-button" style="display: none;">Complete Level</button>
@@ -320,10 +331,10 @@
         <h2>Power-Ups</h2>
         <p>Rare stars spawn with different effects when sorted into any bin:</p>
         <ul>
-            <li><img src="slow_conveyor.png" alt="Slow Conveyor" width="50"> Purple ("Slow Conveyor"): Slows the belt for 5 seconds.</li>
-            <li><img src="speed_boost.png" alt="Speed Boost" width="50"> Green ("Speed Boost"): Doubles the belt speed for 5 seconds—challenge mode!</li>
-            <li><img src="extra_life.png" alt="Extra Life" width="50"> Orange ("Extra Life"): Adds one life (max 3).</li>
-            <li><img src="freeze.png" alt="Freeze" width="50"> Cyan ("Freeze"): Stops the belt for 3 seconds.</li>
+            <li><img src="slow_conveyor.png" alt="Slow Conveyor" width="50"> <strong>Purple ("Slow Conveyor")</strong>: Slows the belt for 5 seconds.</li>
+            <li><img src="speed_boost.png" alt="Speed Boost" width="50"> <strong>Green ("Speed Boost")</strong>: Doubles the belt speed for 5 seconds—challenge mode!</li>
+            <li><img src="extra_life.png" alt="Extra Life" width="50"> <strong>Orange ("Extra Life")</strong>: Adds one life (max 3).</li>
+            <li><img src="freeze.png" alt="Freeze" width="50"> <strong>Cyan ("Freeze")</strong>: Stops the belt for 3 seconds.</li>
         </ul>
         <p>More power-ups coming soon!</p>
         <button id="back-power-ups">Back</button>
@@ -374,5 +385,5 @@
       (adsbygoogle = window.adsbygoogle || []).push({});
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'926c36fbed23c002',t:'MTc0MzA1MDQ4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92734ba7df68bf8e',t:'MTc0MzEyNDcyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c5ea1f97953d8',t:'MTc0MzIxOTg3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c8c6369c38834',t:'MTc0MzIyMTc1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c990218a1bfe8',t:'MTc0MzIyMjI2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928402a7791abfff',t:'MTc0MzI5OTk5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928439427f25bfd6',t:'MTc0MzMwMjIzMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92c5402a88bedd25',t:'MTc0Mzk4NDA4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

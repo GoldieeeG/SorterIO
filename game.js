@@ -145,6 +145,10 @@ troughTextureLoader.load(
     }
 );
 
+// Power-Ups 3D Setup
+let powerUpsScene, powerUpsCamera, powerUpsRenderer;
+let isPowerUpsAnimating = false;
+
 // Manage Conveyors and Troughs
 let conveyorBelts = [];
 let troughs = [];
@@ -284,16 +288,24 @@ const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
 const items = [];
 let spawnInterval;
 
+// Updated shapes with XP values
 const shapes = [
-    { type: 'cube', geometry: new THREE.BoxGeometry(2.25, 2.25, 2.25), color: 0xff0000, needsSorting: true, weight: 0.49, radius: 1.125 },
-    { type: 'triangle', geometry: new THREE.TetrahedronGeometry(1.5), color: 0x0000ff, needsSorting: true, weight: 0.49, radius: 0.75 },
-    { type: 'sphere', geometry: new THREE.SphereGeometry(1.5, 32, 32), color: 0xffff00, needsSorting: true, weight: 0.49, radius: 1.5 },
-    { type: 'cone', geometry: new THREE.ConeGeometry(1.5, 2, 32), color: 0x00ff00, needsSorting: true, weight: 0.49, radius: 1.5 },
-    { type: 'powerUpSlow', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x800080, weight: 0.01, radius: 1, effect: 'slow', label: 'Slow Conveyor' },
-    { type: 'powerUpSpeed', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ff00, weight: 0.01, radius: 1, effect: 'speed', label: 'Speed Boost' },
-    { type: 'powerUpExtraLife', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xffa500, weight: 0.01, radius: 1, effect: 'extraLife', label: 'Extra Life' },
-    { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, weight: 0.01, radius: 1, effect: 'freeze', label: 'Freeze' }
+    { type: 'cube', geometry: new THREE.BoxGeometry(2.25, 2.25, 2.25), color: 0xff0000, needsSorting: true, weight: 0.49, radius: 1.125, xp: 1 },
+    { type: 'triangle', geometry: new THREE.TetrahedronGeometry(1.5), color: 0x0000ff, needsSorting: true, weight: 0.49, radius: 0.75, xp: 4 },
+    { type: 'sphere', geometry: new THREE.SphereGeometry(1.5, 32, 32), color: 0xffff00, needsSorting: true, weight: 0.49, radius: 1.5, xp: 2 },
+    { type: 'cone', geometry: new THREE.ConeGeometry(1.5, 2, 32), color: 0x00ff00, needsSorting: true, weight: 0.49, radius: 1.5, xp: 3 },
+    { type: 'powerUpSlow', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x800080, weight: 0.015, radius: 1, effect: 'slow', label: 'Slow Conveyor', xp: 0 },
+    { type: 'powerUpSpeed', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ff00, weight: 0.015, radius: 1, effect: 'speed', label: 'Speed Boost', xp: 0 },
+    { type: 'powerUpExtraLife', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xffa500, weight: 0.015, radius: 1, effect: 'extraLife', label: 'Extra Life', xp: 0 },
+    { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, weight: 0.015, radius: 1, effect: 'freeze', label: 'Freeze', xp: 0 }
 ];
+
+const xpPerShape = {
+    'cube': 1,
+    'triangle': 4,
+    'sphere': 2,
+    'cone': 3
+};
 
 function getOffset(shape) {
     if (shape.type === 'cube') return 1.125;
@@ -316,6 +328,10 @@ function createItem() {
             shape = availableShapes[i];
             break;
         }
+    }
+    // Optional logging to confirm power-up spawning
+    if (shape.effect) {
+        console.log(`Spawned power-up: ${shape.type}`);
     }
     const material = new THREE.MeshPhongMaterial({ color: shape.color, shininess: 50 });
     if (shape.effect) {
@@ -381,6 +397,7 @@ function createItem() {
     item.userData.effect = shape.effect || null;
     item.userData.isPowerUp = shape.effect ? true : false;
     item.userData.type = shape.type;
+    item.userData.xp = shape.xp;
     if (shape.effect) {
         const light = new THREE.PointLight(shape.color, 1, 5);
         item.add(light);
@@ -403,16 +420,16 @@ function spawnPowerUp(type) {
     let shape;
     switch (type) {
         case 'slow':
-            shape = { type: 'powerUpSlow', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x800080, radius: 1, effect: 'slow', label: 'Slow Conveyor' };
+            shape = { type: 'powerUpSlow', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x800080, radius: 1, effect: 'slow', label: 'Slow Conveyor', xp: 0 };
             break;
         case 'speed':
-            shape = { type: 'powerUpSpeed', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ff00, radius: 1, effect: 'speed', label: 'Speed Boost' };
+            shape = { type: 'powerUpSpeed', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ff00, radius: 1, effect: 'speed', label: 'Speed Boost', xp: 0 };
             break;
         case 'extraLife':
-            shape = { type: 'powerUpExtraLife', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xffa500, radius: 1, effect: 'extraLife', label: 'Extra Life' };
+            shape = { type: 'powerUpExtraLife', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xffa500, radius: 1, effect: 'extraLife', label: 'Extra Life', xp: 0 };
             break;
         case 'freeze':
-            shape = { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, radius: 1, effect: 'freeze', label: 'Freeze' };
+            shape = { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, radius: 1, effect: 'freeze', label: 'Freeze', xp: 0 };
             break;
         default:
             return;
@@ -429,6 +446,7 @@ function spawnPowerUp(type) {
     item.userData.effect = shape.effect;
     item.userData.isPowerUp = true;
     item.userData.type = shape.type;
+    item.userData.xp = shape.xp;
     const light = new THREE.PointLight(shape.color, 1, 5);
     item.add(light);
 
@@ -676,6 +694,8 @@ let yellowSpheresSorted = parseInt(localStorage.getItem('yellowSpheresSorted')) 
 let greenConesSorted = parseInt(localStorage.getItem('greenConesSorted')) || 0;
 let levelsFailed = parseInt(localStorage.getItem('levelsFailed')) || 0;
 let totalPlayTime = parseFloat(localStorage.getItem('totalPlayTime')) || 0; // in seconds
+let playerLevel = parseInt(localStorage.getItem('playerLevel')) || 1;
+let xpTowardsNext = parseInt(localStorage.getItem('xpTowardsNext')) || 0;
 let topSortedPerLevel = { 
     1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 
     6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 
@@ -770,6 +790,8 @@ const nextLevelDisplay = document.getElementById('next-level');
 const endLevelButton = document.getElementById('end-level-button');
 const progressBar = document.getElementById('progress-bar');
 const powerUpStatus = document.getElementById('power-up-status');
+const playerLevelDisplay = document.getElementById('player-level-display');
+const xpDisplay = document.getElementById('xp-display');
 
 const startScreen = document.getElementById('start-screen');
 const levelSelectScreen = document.getElementById('level-select-screen');
@@ -805,6 +827,9 @@ const selectedLevelNumberDisplay = document.getElementById('selected-level-numbe
 const levelStartButton = document.getElementById('level-start-button');
 const backToLevelSelectFromStart = document.getElementById('back-to-level-select-from-start');
 const backToMainMenuFromStart = document.getElementById('back-to-main-menu-from-start');
+
+// NEW: Variable to track the previous screen before opening settings
+let previousScreen = null;
 
 successSound.muted = isMutedSounds;
 failSound.muted = isMutedSounds;
@@ -857,6 +882,60 @@ for (let i = 2; i <= 60; i++) {
             button.textContent = i <= 15 ? `Level ${i} (Locked)` : `Level ${i} (Coming Soon)`;
             button.disabled = true;
         }
+    }
+}
+
+// Power-Ups 3D Functions
+function initPowerUps3D() {
+    const powerUps3DContainer = document.getElementById('power-ups-3d');
+    const width = powerUps3DContainer.clientWidth;
+    const height = powerUps3DContainer.clientHeight;
+    
+    powerUpsScene = new THREE.Scene();
+    powerUpsCamera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    powerUpsRenderer = new THREE.WebGLRenderer({ antialias: true });
+    powerUpsRenderer.setSize(width, height);
+    powerUps3DContainer.appendChild(powerUpsRenderer.domElement);
+    
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    powerUpsScene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 20, 10);
+    powerUpsScene.add(directionalLight);
+    
+    // Add power-up models
+    const powerUpTypes = [
+        { color: 0x800080, label: 'Slow Conveyor' },
+        { color: 0x00ff00, label: 'Speed Boost' },
+        { color: 0xffa500, label: 'Extra Life' },
+        { color: 0x00ffff, label: 'Freeze' }
+    ];
+    
+    powerUpTypes.forEach((type, index) => {
+        const geometry = new THREE.IcosahedronGeometry(1, 1);
+        const material = new THREE.MeshPhongMaterial({ color: type.color, shininess: 50 });
+        const powerUp = new THREE.Mesh(geometry, material);
+        powerUp.position.set((index - 1.5) * 2.5, 0, 0);
+        powerUpsScene.add(powerUp);
+    });
+    
+    powerUpsCamera.position.set(0, 0, 10);
+    powerUpsCamera.lookAt(0, 0, 0);
+}
+
+function animatePowerUps() {
+    if (isPowerUpsAnimating) {
+        requestAnimationFrame(animatePowerUps);
+        
+        // Rotate the power-ups for visual effect
+        powerUpsScene.children.forEach(child => {
+            if (child instanceof THREE.Mesh) {
+                child.rotation.y += 0.01;
+            }
+        });
+        
+        powerUpsRenderer.render(powerUpsScene, powerUpsCamera);
     }
 }
 
@@ -1007,12 +1086,23 @@ addButtonListeners('power-ups-button', () => {
     console.log('Power-Ups button clicked/touched');
     startScreen.style.display = 'none';
     powerUpsScreen.style.display = 'block';
+    initPowerUps3D();
+    isPowerUpsAnimating = true;
+    animatePowerUps();
 });
 
 addButtonListeners('back-power-ups', () => {
     console.log('Back from power-ups clicked/touched');
     powerUpsScreen.style.display = 'none';
     startScreen.style.display = 'block';
+    isPowerUpsAnimating = false;
+    // Clean up
+    if (powerUpsRenderer) {
+        powerUpsRenderer.domElement.remove();
+        powerUpsRenderer = null;
+    }
+    powerUpsScene = null;
+    powerUpsCamera = null;
 });
 
 addButtonListeners('stats-button', () => {
@@ -1026,6 +1116,12 @@ addButtonListeners('stats-button', () => {
     greenSortedDisplay.textContent = greenConesSorted;
     levelsFailedDisplay.textContent = levelsFailed;
     totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(2); // Updated to 2 decimal places
+    document.getElementById('player-level').textContent = playerLevel;
+    if (playerLevel < 100) {
+        document.getElementById('xp-to-next').textContent = `${xpTowardsNext} / ${100 * playerLevel}`;
+    } else {
+        document.getElementById('xp-to-next').textContent = 'Max Level';
+    }
 });
 
 addButtonListeners('achievements-button', () => {
@@ -1102,8 +1198,10 @@ addButtonListeners('back-to-level-select', () => {
     updateLevelButtons(); // Update buttons when returning to level select
 });
 
+// NEW: Updated to set previousScreen
 addButtonListeners('settings-from-level-complete', () => {
     console.log('Settings from level complete clicked/touched');
+    previousScreen = 'level-complete';
     levelCompleteScreen.style.display = 'none';
     showSettings();
 });
@@ -1116,69 +1214,98 @@ addButtonListeners('end-level-button', () => {
     cleanupGame();
 });
 
+// NEW: Updated to set previousScreen
 addButtonListeners('settings-button-start', () => {
     console.log('Settings from start clicked/touched');
+    previousScreen = 'start';
     startScreen.style.display = 'none';
     showSettings();
 });
 
-addButtonListeners('settings-button-pause', () => {
-    console.log('Settings from pause clicked/touched');
-    pauseScreen.style.display = 'none';
-    showSettings();
+// Settings Handlers
+const muteSoundsCheckbox = document.getElementById('mute-sounds');
+const muteMusicCheckbox = document.getElementById('mute-music');
+
+function updateMuteSounds() {
+    isMutedSounds = muteSoundsCheckbox.checked;
+    localStorage.setItem('isMutedSounds', isMutedSounds.toString());
+    successSound.muted = isMutedSounds;
+    failSound.muted = isMutedSounds;
+    levelSuccessSound.muted = isMutedSounds;
+    console.log('mute-sounds updated to', isMutedSounds);
+}
+
+function updateMuteMusic() {
+    isMutedMusic = muteMusicCheckbox.checked;
+    localStorage.setItem('isMutedMusic', isMutedMusic.toString());
+    gameMusic.muted = isMutedMusic;
+    if (isMutedMusic) {
+        gameMusic.pause();
+    } else if (gameUI.style.display === 'block' && !isPaused) {
+        gameMusic.play().catch(e => console.log('Error playing game music:', e));
+    }
+    console.log('mute-music updated to', isMutedMusic);
+}
+
+muteSoundsCheckbox.addEventListener('change', updateMuteSounds);
+muteSoundsCheckbox.addEventListener('click', updateMuteSounds);
+
+muteMusicCheckbox.addEventListener('change', updateMuteMusic);
+muteMusicCheckbox.addEventListener('click', updateMuteMusic);
+
+document.getElementById('sounds-volume').addEventListener('input', () => {
+    soundVolume = parseFloat(document.getElementById('sounds-volume').value);
+    localStorage.setItem('soundVolume', soundVolume);
+    successSound.volume = soundVolume;
+    failSound.volume = soundVolume;
+    levelSuccessSound.volume = soundVolume;
+});
+
+document.getElementById('music-volume').addEventListener('input', () => {
+    musicVolume = parseFloat(document.getElementById('music-volume').value);
+    localStorage.setItem('musicVolume', musicVolume);
+    gameMusic.volume = musicVolume;
 });
 
 addButtonListeners('close-settings', () => {
     console.log('Close settings clicked/touched');
     settingsScreen.style.display = 'none';
-    if (gameUI.style.display === 'block') {
+    if (previousScreen === 'start') {
+        startScreen.style.display = 'block';
+    } else if (previousScreen === 'pause') {
         pauseScreen.style.display = 'block';
-    } else if (levelCompleteScreen.style.display === 'block') {
+    } else if (previousScreen === 'level-complete') {
         levelCompleteScreen.style.display = 'block';
+    } else if (gameUI.style.display === 'block') {
+        pauseScreen.style.display = 'block';
     } else {
         startScreen.style.display = 'block';
     }
 });
 
-document.getElementById('mute-sounds').addEventListener('change', (e) => {
-    isMutedSounds = e.target.checked;
-    successSound.muted = isMutedSounds;
-    failSound.muted = isMutedSounds;
-    levelSuccessSound.muted = isMutedSounds;
-    localStorage.setItem('isMutedSounds', isMutedSounds);
-});
-
-document.getElementById('mute-music').addEventListener('change', (e) => {
-    isMutedMusic = e.target.checked;
-    gameMusic.muted = isMutedMusic;
-    localStorage.setItem('isMutedMusic', isMutedMusic);
-});
-
-document.getElementById('sounds-volume').addEventListener('input', (e) => {
-    soundVolume = parseFloat(e.target.value);
-    console.log('Setting sound volume to', soundVolume);
-    successSound.volume = soundVolume;
-    failSound.volume = soundVolume;
-    levelSuccessSound.volume = soundVolume;
-    localStorage.setItem('soundVolume', soundVolume);
-});
-
-document.getElementById('music-volume').addEventListener('input', (e) => {
-    musicVolume = parseFloat(e.target.value);
-    console.log('Setting music volume to', musicVolume);
-    gameMusic.volume = musicVolume;
-    localStorage.setItem('musicVolume', musicVolume);
+addButtonListeners('settings-button-pause', () => {
+    console.log('Settings from pause clicked/touched');
+    previousScreen = 'pause';
+    pauseScreen.style.display = 'none';
+    showSettings();
 });
 
 addButtonListeners('reset-game-data', () => {
-    console.log('Reset game data button clicked/touched');
-    if (confirm('Are you sure you want to reset all game data? This will reset level progress, stats, and achievements.')) {
-        levelUnlocks = {};
-        for (let i = 2; i <= 45; i++) { // Changed from 60 to 45
-            levelUnlocks[i] = false;
-        }
-        localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
-
+    console.log('Reset game data clicked/touched');
+    if (confirm('Are you sure you want to reset all game data? This action cannot be undone.')) {
+        localStorage.clear();
+        isMutedSounds = false;
+        isMutedMusic = false;
+        soundVolume = 1;
+        musicVolume = 1;
+        successSound.muted = false;
+        failSound.muted = false;
+        levelSuccessSound.muted = false;
+        gameMusic.muted = false;
+        successSound.volume = 1;
+        failSound.volume = 1;
+        levelSuccessSound.volume = 1;
+        gameMusic.volume = 1;
         totalItemsSorted = 0;
         redCubesSorted = 0;
         blueTrianglesSorted = 0;
@@ -1186,15 +1313,14 @@ addButtonListeners('reset-game-data', () => {
         greenConesSorted = 0;
         levelsFailed = 0;
         totalPlayTime = 0;
-        localStorage.setItem('totalItemsSorted', totalItemsSorted);
-        localStorage.setItem('redCubesSorted', redCubesSorted);
-        localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
-        localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
-        localStorage.setItem('greenConesSorted', greenConesSorted);
-        localStorage.setItem('levelsFailed', levelsFailed);
-        localStorage.setItem('totalPlayTime', totalPlayTime);
-
+        playerLevel = 1;
+        xpTowardsNext = 0;
+        levelUnlocks = {};
+        for (let i = 2; i <= 45; i++) {
+            levelUnlocks[i] = false;
+        }
         unlockedAchievements = {};
+        localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
         localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
 
         shapeCounts = { cube: 0, triangle: 0, sphere: 0, cone: 0 };
@@ -1608,6 +1734,13 @@ function startGame(level) {
     setupConveyors();
     setupTroughs();
     restartGame();
+    // Initialize player level and XP display
+    playerLevelDisplay.textContent = `Level: ${playerLevel}`;
+    if (playerLevel < 100) {
+        xpDisplay.textContent = `XP: ${xpTowardsNext} / ${100 * playerLevel}`;
+    } else {
+        xpDisplay.textContent = 'XP: Max Level';
+    }
 }
 
 function cleanupBins() {
@@ -1942,6 +2075,27 @@ function onEnd(event) {
                                 if (sortCount >= 100) unlockAchievement("sort_100_in_level");
                                 if (sortCount >= 1000) unlockAchievement("score_1000_in_level");
 
+                                // Award XP
+                                const xpGained = sortedItem.userData.xp || 0;
+                                xpTowardsNext += xpGained;
+                                while (xpTowardsNext >= 100 * playerLevel && playerLevel < 100) {
+                                    xpTowardsNext -= 100 * playerLevel;
+                                    playerLevel++;
+                                    showNotification(`Leveled up to level ${playerLevel}!`);
+                                }
+                                if (playerLevel >= 100) {
+                                    xpTowardsNext = 0;
+                                }
+                                localStorage.setItem('playerLevel', playerLevel);
+                                localStorage.setItem('xpTowardsNext', xpTowardsNext);
+                                // Update in-game display
+                                playerLevelDisplay.textContent = `Level: ${playerLevel}`;
+                                if (playerLevel < 100) {
+                                    xpDisplay.textContent = `XP: ${xpTowardsNext} / ${100 * playerLevel}`;
+                                } else {
+                                    xpDisplay.textContent = 'XP: Max Level';
+                                }
+
                                 if (sortCount >= itemsNeeded) {
                                     console.log('Condition met, showing end level button'); // Added console log
                                     const timeElapsed = (Date.now() - levelStartTime) / 1000;
@@ -1963,7 +2117,7 @@ function onEnd(event) {
                                     if (currentLevel == 10 && powerUpsUsedThisLevel.size == 0) unlockAchievement("level_10_no_powerups");
                                     if (lives == 1) unlockAchievement("complete_with_one_life");
                                     if (timeElapsed < 60) unlockAchievement("complete_level_under_1_min");
-                                    // Note: "all_levels_no_lives_lost" is checked but may need refinement
+                                    // Note: "all imposes_no_lives_lost" is checked but may need refinement
                                     if (currentLevel === 45 && levelsFailed === 0) unlockAchievement("all_levels_no_lives_lost");
 
                                     if (currentLevel < 45) {
