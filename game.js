@@ -711,6 +711,7 @@ let blueTrianglesSorted = parseInt(localStorage.getItem('blueTrianglesSorted')) 
 let yellowSpheresSorted = parseInt(localStorage.getItem('yellowSpheresSorted')) || 0;
 let greenConesSorted = parseInt(localStorage.getItem('greenConesSorted')) || 0;
 let levelsFailed = parseInt(localStorage.getItem('levelsFailed')) || 0;
+let totalLevelsPassed = parseInt(localStorage.getItem('totalLevelsPassed')) || 0;
 let totalPlayTime = parseFloat(localStorage.getItem('totalPlayTime')) || 0; // in seconds
 let playerLevel = parseInt(localStorage.getItem('playerLevel')) || 1;
 let xpTowardsNext = parseInt(localStorage.getItem('xpTowardsNext')) || 0;
@@ -761,6 +762,8 @@ let powerUpsUsed = JSON.parse(localStorage.getItem('powerUpsUsed')) || {
     freeze: false
 };
 let levelItemsSorted = 0;
+
+let username = localStorage.getItem('username') || 'Player';
 
 // NEW: Added variables for new achievements
 let currentRedStreak = 0;
@@ -838,6 +841,11 @@ const achievementsList = document.getElementById('achievements-list');
 
 const powerUpsScreen = document.getElementById('power-ups-screen');
 const updatesScreen = document.getElementById('updates-screen');
+
+const leaderboardButton = document.getElementById('leaderboard-button');
+const leaderboardScreen = document.getElementById('leaderboard-screen');
+const leaderboardList = document.getElementById('leaderboard-list');
+const backToStartFromLeaderboard = document.getElementById('back-to-start-from-leaderboard');
 
 let selectedLevel;
 const levelStartScreen = document.getElementById('level-start-screen');
@@ -1230,6 +1238,9 @@ addButtonListeners('end-level-button', () => {
     levelCompleteScreen.style.display = 'block';
     levelCompleteSortCount.textContent = sortCount;
     cleanupGame();
+    totalLevelsPassed++;
+    localStorage.setItem('totalLevelsPassed', totalLevelsPassed);
+    sendDataToSheetDB();
 });
 
 // NEW: Updated to set previousScreen
@@ -1564,6 +1575,31 @@ addButtonListeners('back-to-start-page-5', () => {
     startScreen.style.display = 'block';
 });
 
+addButtonListeners('change-username', () => {
+    console.log('Change Username button clicked/touched');
+    const newUsername = document.getElementById('new-username').value.trim();
+    if (newUsername) {
+        username = newUsername;
+        localStorage.setItem('username', username);
+        document.getElementById('current-username').textContent = username;
+        document.getElementById('username-message').textContent = 'Username changed successfully!';
+        document.getElementById('username-message').style.display = 'block';
+    } else {
+        document.getElementById('username-message').textContent = 'Please enter a valid username.';
+        document.getElementById('username-message').style.display = 'block';
+    }
+});
+addButtonListeners('leaderboard-button', () => {
+    startScreen.style.display = 'none';
+    leaderboardScreen.style.display = 'block';
+    fetchLeaderboard();
+});
+
+addButtonListeners('back-to-start-from-leaderboard', () => {
+    leaderboardScreen.style.display = 'none';
+    startScreen.style.display = 'block';
+});
+
 // Achievement Functions
 const achievements = [
     { id: "novice_sorter", name: "Novice Sorter", description: "Sort 50 items in total", difficulty: "easy" },
@@ -1802,6 +1838,9 @@ function showSettings() {
     document.getElementById('mute-music').checked = isMutedMusic;
     document.getElementById('sounds-volume').value = soundVolume;
     document.getElementById('music-volume').value = musicVolume;
+    document.getElementById('current-username').textContent = username;
+    document.getElementById('new-username').value = '';
+    document.getElementById('username-message').style.display = 'none';
     gamePausedText.style.display = (gameUI.style.display === 'block') ? 'block' : 'none';
 }
 
@@ -2224,6 +2263,7 @@ function loseLife() {
         gameOverSortCount.textContent = sortCount;
         gameOverNeededCount.textContent = itemsNeeded;
         cleanupGame();
+        sendDataToSheetDB();
     }
 }
 
@@ -2368,3 +2408,69 @@ renderer.setClearColor(0x000000, 0);
 renderer.setPixelRatio(window.devicePixelRatio);
 
 setupBins();
+
+function sendDataToSheetDB() {
+    const data = {
+        "data": [            {                "username": username,                "totalItemsSorted": totalItemsSorted,                "levelsPassed": totalLevelsPassed,                "levelsFailed": levelsFailed,                "totalHoursPlayed": (totalPlayTime / 3600).toFixed(2),                "timestamp": new Date().toISOString()            }        ]
+    };
+    fetch('https://sheetdb.io/api/v1/alykvz0kwp4lg', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            console.error('Error sending data to SheetDB:', response.statusText);
+        }
+    })
+    .catch(error => {
+        console.error('Error sending data to SheetDB:', error);
+    });
+}
+
+function fetchLeaderboard() {
+    leaderboardList.innerHTML = 'Loading...';
+    fetch('https://sheetdb.io/api/v1/alykvz0kwp4lg')
+        .then(response => response.json())
+        .then(data => {
+            const latestEntries = {};
+            data.forEach(entry => {
+                const parsedEntry = {
+                    username: entry.username,
+                    totalItemsSorted: parseInt(entry.totalItemsSorted, 10),
+                    levelsPassed: parseInt(entry.levelsPassed, 10),
+                    levelsFailed: parseInt(entry.levelsFailed, 10),
+                    totalHoursPlayed: parseFloat(entry.totalHoursPlayed),
+                    timestamp: entry.timestamp
+                };
+                if (!latestEntries[parsedEntry.username] || new Date(parsedEntry.timestamp) > new Date(latestEntries[parsedEntry.username].timestamp)) {
+                    latestEntries[parsedEntry.username] = parsedEntry;
+                }
+            });
+            const latestData = Object.values(latestEntries);
+            if (latestData.length > 0) {
+                const maxItemsSorted = Math.max(...latestData.map(entry => entry.totalItemsSorted));
+                const topSorter = latestData.find(entry => entry.totalItemsSorted === maxItemsSorted);
+                const maxLevelsPassed = Math.max(...latestData.map(entry => entry.levelsPassed));
+                const topLevelsPassed = latestData.find(entry => entry.levelsPassed === maxLevelsPassed);
+                const maxLevelsFailed = Math.max(...latestData.map(entry => entry.levelsFailed));
+                const topLevelsFailed = latestData.find(entry => entry.levelsFailed === maxLevelsFailed);
+                const maxHoursPlayed = Math.max(...latestData.map(entry => entry.totalHoursPlayed));
+                const topHoursPlayed = latestData.find(entry => entry.totalHoursPlayed === maxHoursPlayed);
+                leaderboardList.innerHTML = `
+                    <p>Top Sorter: ${topSorter.username} - ${topSorter.totalItemsSorted} items</p>
+                    <p>Most Levels Passed: ${topLevelsPassed.username} - ${topLevelsPassed.levelsPassed} levels</p>
+                    <p>Most Levels Failed: ${topLevelsFailed.username} - ${topLevelsFailed.levelsFailed} levels</p>
+                    <p>Longest Play Time: ${topHoursPlayed.username} - ${topHoursPlayed.totalHoursPlayed.toFixed(2)} hours</p>
+                `;
+            } else {
+                leaderboardList.innerHTML = 'No data available.';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching leaderboard:', error);
+            leaderboardList.innerHTML = 'Error loading leaderboard.';
+        });
+}

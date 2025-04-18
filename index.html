@@ -15,7 +15,7 @@
     <div id="game-container"></div>
     <div id="start-screen">
         <h1>Conveyor Sort</h1>
-        <p>For all support and bug reports, please email <a href="mailto:lkrave916@yahoo.com">lkrave916@yahoo.com</a></p>
+        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#1270777e667067616677607b7d52757f737b7e3c717d7f"><span class="__cf_email__" data-cfemail="c5a7a0a9b1a7b0b6b1a0b7acaa85a2a8a4aca9eba6aaa8">[email&#160;protected]</span></a></p>
         <div class="columns">
             <div class="column-left">
                 <button id="start-button">Start</button>
@@ -28,11 +28,17 @@
                 <button id="settings-button-start">Settings</button>
                 <button id="stats-button">Stats</button>
                 <button id="updates-button">Updates</button>
+                <button id="leaderboard-button">Leaderboard</button>
             </div>
         </div>
         <div id="start-ad" class="ad-container" style="width: 300px; height: 250px; margin: 20px auto;"></div>
         <p>Created by Goldie 2025</p>
-        <p id="version-text">Alpha v0.42</p>
+        <p id="version-text">Alpha v0.43</p>
+    </div>
+    <div id="leaderboard-screen" style="display: none;">
+        <h2>Leaderboard</h2>
+        <div id="leaderboard-list"></div>
+        <button id="back-to-start-from-leaderboard">Back</button>
     </div>
     <div id="stats-screen" style="display: none;">
         <h2>Player Stats</h2>
@@ -64,18 +70,7 @@
     <div id="updates-screen" style="display: none;">
         <h2>Latest Updates</h2>
         <ul>
-            <li><span class="update-version">Update v0.40</span> -
-                <ul>
-                    <li>Added outline for sorting bins to make them easier to see.</li>
-                    <li>Adjusted the complete level button to stay stationary but glow when hovered over.</li>
-                    <li>Added green items to stats page.</li>
-                    <li>Moved some medium achievements to easy.</li>
-                    <li>Added 5 more levels.</li>
-                    <li>Gave achievements page more styling.</li>
-                    <li>Added Updates Section</li>
-                </ul>
-            </li>
-            <li><span class="update-version">Update v0.42</span> -
+            <li><span class="update-version">Update v0.41</span> -
                 <ul>
                     <li>Increased spawn rates for all powerups.</li>
                     <li>Added levels up to 45. Reduced amount of items required to pass level 36-45.</li>
@@ -90,6 +85,11 @@
                     <li>Added level progression to the game, Max Level 100 at this time.</li>
                     <li>More visual enchancements</li>
                     <li>Increased all power up spawn rates by 1%.</li>
+                </ul>
+            </li>
+            <li><span class="update-version">Update v0.43</span> -
+                <ul>
+                    <li>Added usernames and leaderboards.</li>
                 </ul>
             </li>
         </ul>
@@ -275,7 +275,7 @@
         <div id="power-up-status" style="display: none;"></div>
         <div id="player-level-display">Level: 1</div>
         <div id="xp-display">XP: 0 / 100</div>
-        <div id="version-container">Alpha v0.42</div>
+        <div id="version-container">Alpha v0.43</div>
         <button id="restart-button">Restart Game</button>
         <button id="pause-resume-button">Pause</button>
         <button id="end-level-button" style="display: none;">Complete Level</button>
@@ -286,7 +286,7 @@
         <button id="settings-button-pause">Settings</button>
         <button id="back-to-start-pause">Back to Start</button>
         <div id="pause-ad" class="ad-container" style="width: 300px; height: 250px; margin: 20px auto;"></div>
-        <p>For all support and bug reports, please email <a href="mailto:lkrave916@yahoo.com">lkrave916@yahoo.com</a></p>
+        <p>For all support and bug reports, please email <a href="/cdn-cgi/l/email-protection#3a585f564e584f494e5f4853557a5d575b535614595557"><span class="__cf_email__" data-cfemail="c7a5a2abb3a5b2b4b3a2b5aea887a0aaa6aeabe9a4a8aa">[email&#160;protected]</span></a></p>
     </div>
     <div id="game-over-screen" style="display: none;">
         <h2>Level Failed</h2>
@@ -327,6 +327,10 @@
         <label>Game Sounds Volume: <input type="range" id="sounds-volume" min="0" max="1" step="0.1" value="1"></label>
         <label><input type="checkbox" id="mute-music"> Mute Music</label>
         <label>Music Volume: <input type="range" id="music-volume" min="0" max="1" step="0.1" value="1"></label>
+        <p>Username: <span id="current-username"></span></p>
+        <input type="text" id="new-username" placeholder="Enter new username">
+        <button id="change-username">Change Username</button>
+        <p id="username-message" style="display: none;"></p>
         <button id="reset-game-data">Reset Game Data</button>
         <button id="close-settings">Close</button>
         <p id="game-paused-text" style="display: none;">Game Paused</p>
@@ -355,7 +359,7 @@
     <audio id="sort-fail" src="buzz.wav" preload="auto"></audio>
     <audio id="level-success" src="level_success.wav" preload="auto"></audio>
     <audio id="game-music" src="gamemusic.wav" preload="auto" loop></audio>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="game.js"></script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9321c59b7d686733',t:'MTc0NDk1NDI0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
