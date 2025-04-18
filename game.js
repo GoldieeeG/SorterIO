@@ -1,3 +1,21 @@
+function loadAdIfNeeded(containerId, adSlot) {
+    const container = document.getElementById(containerId);
+    if (container && container.children.length === 0) {
+        const ins = document.createElement('ins');
+        ins.className = 'adsbygoogle';
+        ins.style.display = 'block';
+        ins.setAttribute('data-ad-client', 'ca-pub-4887565612343348');
+        ins.setAttribute('data-ad-slot', adSlot);
+        ins.setAttribute('data-ad-format', 'auto');
+        container.appendChild(ins);
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadAdIfNeeded('start-ad', '8874697286');
+});
+
 // Scene Setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -1761,6 +1779,7 @@ function togglePause() {
             spawnInterval = null;
         }
         pauseScreen.style.display = 'block';
+        loadAdIfNeeded('pause-ad', '4400265656');
         pauseResumeButton.textContent = 'Resume';
         gameMusic.pause();
     } else {
@@ -2201,6 +2220,7 @@ function loseLife() {
         localStorage.setItem('levelsFailed', levelsFailed);
         gameUI.style.display = 'none';
         gameOverScreen.style.display = 'block';
+        loadAdIfNeeded('gameover-ad', '7921742100');
         gameOverSortCount.textContent = sortCount;
         gameOverNeededCount.textContent = itemsNeeded;
         cleanupGame();
