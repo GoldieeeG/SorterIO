@@ -33,7 +33,7 @@
         </div>
         <div id="start-ad" class="ad-container" style="width: 300px; height: 250px; margin: 20px auto;"></div>
         <p>Created by Goldie 2025</p>
-        <p id="version-text">Alpha v0.43</p>
+        <p id="version-text">Alpha v0.44</p>
     </div>
     <div id="leaderboard-screen" style="display: none;">
         <h2>Leaderboard</h2>
@@ -90,6 +90,14 @@
             <li><span class="update-version">Update v0.43</span> -
                 <ul>
                     <li>Added usernames and leaderboards.</li>
+                </ul>
+            </li>
+            <li><span class="update-version">Update v0.44</span> -
+                <ul>
+                    <li>Added top players for each level (most sorted).</li>
+                    <li>Added 3 new powerups.</li>
+                    <li>Fixed: Total Play Time Accuracy.</li>
+                    <li>Fixed: Leaderboard issues.</li>
                 </ul>
             </li>
         </ul>
@@ -243,8 +251,39 @@
                 <button class="level-button" id="level-75-button" disabled>Level 75 (Coming Soon)</button>
             </div>
         </div>
+        <div id="level-select-page-6" style="display: none;">
+            <h2>Level Select (Page 6)</h2>
+            <div id="level-columns-page-6">
+                <div class="level-column">
+                    <button class="level-button" id="level-76-button" disabled>Level 76 (Coming Soon)</button>
+                    <button class="level-button" id="level-77-button" disabled>Level 77 (Coming Soon)</button>
+                    <button class="level-button" id="level-78-button" disabled>Level 78 (Coming Soon)</button>
+                    <button class="level-button" id="level-79-button" disabled>Level 79 (Coming Soon)</button>
+                    <button class="level-button" id="level-80-button" disabled>Level 80 (Coming Soon)</button>
+                </div>
+                <div class="level-column">
+                    <button class="level-button" id="level-81-button" disabled>Level 81 (Coming Soon)</button>
+                    <button class="level-button" id="level-82-button" disabled>Level 82 (Coming Soon)</button>
+                    <button class="level-button" id="level-83-button" disabled>Level 83 (Coming Soon)</button>
+                    <button class="level-button" id="level-84-button" disabled>Level 84 (Coming Soon)</button>
+                    <button class="level-button" id="level-85-button" disabled>Level 85 (Coming Soon)</button>
+                </div>
+                <div class="level-column">
+                    <button class="level-button" id="level-86-button" disabled>Level 86 (Coming Soon)</button>
+                    <button class="level-button" id="level-87-button" disabled>Level 87 (Coming Soon)</button>
+                    <button class="level-button" id="level-88-button" disabled>Level 88 (Coming Soon)</button>
+                    <button class="level-button" id="level-89-button" disabled>Level 89 (Coming Soon)</button>
+                    <button class="level-button" id="level-90-button" disabled>Level 90 (Coming Soon)</button>
+                </div>
+            </div>
+            <div id="level-select-buttons-page-6">
+                <button id="prev-page-button-page-6">Previous Page</button>
+                <button id="back-to-start-page-6">Back</button>
+            </div>
+        </div>
         <div id="level-select-buttons-page-5">
             <button id="prev-page-button-page-5">Previous Page</button>
+            <button id="next-page-button-page-5">Next Page</button>
             <button id="back-to-start-page-5">Back</button>
         </div>
     </div>
@@ -272,13 +311,17 @@
         <div id="top-sorted-container">
             Top Sorted: <span id="top-sorted-count">0</span>
         </div>
+        <div id="top-player-container">
+            Top Player: <span id="top-player-name">Loading...</span> - <span id="top-player-score">0</span>
+        </div>
         <div id="power-up-status" style="display: none;"></div>
         <div id="player-level-display">Level: 1</div>
         <div id="xp-display">XP: 0 / 100</div>
-        <div id="version-container">Alpha v0.43</div>
+        <div id="version-container">Alpha v0.44</div>
         <button id="restart-button">Restart Game</button>
         <button id="pause-resume-button">Pause</button>
         <button id="end-level-button" style="display: none;">Complete Level</button>
+        <button id="use-power-up-button">Use Power-Up</button>
     </div>
     <div id="pause-screen" style="display: none;">
         <h2>Paused</h2>
@@ -313,12 +356,16 @@
         <h2>Power-Ups</h2>
         <p>Rare stars spawn with different effects when sorted into any bin:</p>
         <ul>
-            <li><img src="slow_conveyor.png" alt="Slow Conveyor" width="50"> <strong>Purple ("Slow Conveyor")</strong>: Slows the belt for 5 seconds.</li>
-            <li><img src="speed_boost.png" alt="Speed Boost" width="50"> <strong>Green ("Speed Boost")</strong>: Doubles the belt speed for 5 seconds—challenge mode!</li>
-            <li><img src="extra_life.png" alt="Extra Life" width="50"> <strong>Orange ("Extra Life")</strong>: Adds one life (max 3).</li>
-            <li><img src="freeze.png" alt="Freeze" width="50"> <strong>Cyan ("Freeze")</strong>: Stops the belt for 3 seconds.</li>
+            <li><img src="slow_conveyor.png" alt="Slow Conveyor" width="50"> <strong>Purple ("Slow Conveyor")</strong>: Slows the belt for 5 seconds. <span class="power-up-count" data-type="slow">0</span></li>
+            <li><img src="speed_boost.png" alt="Speed Boost" width="50"> <strong>Green ("Speed Boost")</strong>: Doubles the belt speed for 5 seconds—challenge mode! <span class="power-up-count" data-type="speed">0</span></li>
+            <li><img src="extra_life.png" alt="Extra Life" width="50"> <strong>Orange ("Extra Life")</strong>: Adds one life (max 3). <span class="power-up-count" data-type="extraLife">0</span></li>
+            <li><img src="freeze.png" alt="Freeze" width="50"> <strong>Cyan ("Freeze")</strong>: Stops the belt for 3 seconds. <span class="power-up-count" data-type="freeze">0</span></li>
+            <li><img src="auto_sort.png" alt="Auto Sort" width="50"> <strong>Blue ("Auto Sort")</strong>: Automatically sorts the next 5 items correctly. <span class="power-up-count" data-type="autoSort">0</span></li>
+            <li><img src="magnet.png" alt="Magnet" width="50"> <strong>Red ("Magnet")</strong>: Attracts all items to the cursor for 5 seconds. <span class="power-up-count" data-type="magnet">0</span></li>
+            <li><img src="speed_surge.png" alt="Speed Surge" width="50"> <strong>Pink ("Speed Surge")</strong>: Triples conveyor and spawn speed for 5 seconds. <span class="power-up-count" data-type="speedSurge">0</span></li>
         </ul>
         <p>More power-ups coming soon!</p>
+        <div id="power-ups-3d"></div>
         <button id="back-power-ups">Back</button>
     </div>
     <div id="settings-screen" style="display: none;">
@@ -349,10 +396,24 @@
         <button id="spawn-speed-boost">Speed Boost</button>
         <button id="spawn-extra-life">Extra Life</button>
         <button id="spawn-freeze">Freeze</button>
+        <button id="spawn-auto-sort">Auto Sort</button>
+        <button id="spawn-magnet">Magnet</button>
+        <button id="spawn-speed-surge">Speed Surge</button>
         <div id="power-up-menu-buttons">
             <button id="back-to-dev-tools">Back to Dev Tools</button>
             <button id="close-power-up-menu">Close</button>
         </div>
+    </div>
+    <div id="player-power-up-menu" style="display: none;">
+        <h3>Select Power-Up to Use</h3>
+        <button id="use-slow" data-type="slow">Slow Conveyor (<span id="use-slow-count">0</span>)</button>
+        <button id="use-speed" data-type="speed">Speed Boost (<span id="use-speed-count">0</span>)</button>
+        <button id="use-extraLife" data-type="extraLife">Extra Life (<span id="use-extraLife-count">0</span>)</button>
+        <button id="use-freeze" data-type="freeze">Freeze (<span id="use-freeze-count">0</span>)</button>
+        <button id="use-autoSort" data-type="autoSort">Auto Sort (<span id="use-autoSort-count">0</span>)</button>
+        <button id="use-magnet" data-type="magnet">Magnet (<span id="use-magnet-count">0</span>)</button>
+        <button id="use-speedSurge" data-type="speedSurge">Speed Surge (<span id="use-speedSurge-count">0</span>)</button>
+        <button id="back-to-game">Back</button>
     </div>
     <div id="spawn-notification" style="display: none;"></div>
     <audio id="sort-success" src="chime.wav" preload="auto"></audio>

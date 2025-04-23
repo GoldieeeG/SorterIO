@@ -315,7 +315,10 @@ const shapes = [
     { type: 'powerUpSlow', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x800080, weight: 0.015, radius: 1, effect: 'slow', label: 'Slow Conveyor', xp: 0 },
     { type: 'powerUpSpeed', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ff00, weight: 0.015, radius: 1, effect: 'speed', label: 'Speed Boost', xp: 0 },
     { type: 'powerUpExtraLife', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xffa500, weight: 0.015, radius: 1, effect: 'extraLife', label: 'Extra Life', xp: 0 },
-    { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, weight: 0.015, radius: 1, effect: 'freeze', label: 'Freeze', xp: 0 }
+    { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, weight: 0.015, radius: 1, effect: 'freeze', label: 'Freeze', xp: 0 },
+    { type: 'powerUpAutoSort', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x0000ff, weight: 0.015, radius: 1, effect: 'autoSort', label: 'Auto Sort', xp: 0 },
+    { type: 'powerUpMagnet', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xff0000, weight: 0.015, radius: 1, effect: 'magnet', label: 'Magnet', xp: 0 },
+    { type: 'powerUpSpeedSurge', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xff69b4, weight: 0.015, radius: 1, effect: 'speedSurge', label: 'Speed Surge', xp: 0 }
 ];
 
 const xpPerShape = {
@@ -334,12 +337,17 @@ function getOffset(shape) {
 }
 
 function createItem() {
+    if (!shapes || shapes.length === 0) {
+        console.error('Shapes array is undefined or empty');
+        return;
+    }
+
     const availableShapes = (currentLevel < 10) ? shapes.slice(0, 2) : 
                            (currentLevel < 16) ? shapes.slice(0, 3).concat(shapes.slice(4)) : 
                            shapes.slice(0, 4).concat(shapes.slice(4));
     const totalWeight = availableShapes.reduce((sum, shape) => sum + shape.weight, 0);
     let rand = Math.random() * totalWeight;
-    let shape;
+    let shape = availableShapes[availableShapes.length - 1]; // Fallback to last shape
     for (let i = 0; i < availableShapes.length; i++) {
         rand -= availableShapes[i].weight;
         if (rand <= 0) {
@@ -347,10 +355,16 @@ function createItem() {
             break;
         }
     }
-    // Optional logging to confirm power-up spawning
+
+    if (!shape) {
+        console.error('No shape selected for spawning');
+        return;
+    }
+
     if (shape.effect) {
         console.log(`Spawned power-up: ${shape.type}`);
     }
+
     const material = new THREE.MeshPhongMaterial({ color: shape.color, shininess: 50 });
     if (shape.effect) {
         material.emissive.set(shape.color);
@@ -381,11 +395,15 @@ function createItem() {
             maxZ = 20;
         }
         const direction = conveyorChoice === 'left' ? leftConveyorDirection : rightConveyorDirection;
-        const spawnZ = direction > 0 ? minZ : maxZ; // z=-20 for direction=1 (levels 36-45 left), z=20 otherwise
+        if (typeof direction === 'undefined') {
+            console.error(`Conveyor direction undefined for ${conveyorChoice} conveyor`);
+            return;
+        }
+        const spawnZ = direction > 0 ? minZ : maxZ;
         item.position.set(xPos, conveyorHeight + getOffset(shape), spawnZ);
         item.userData.conveyor = conveyorChoice;
         item.userData.direction = direction;
-        item.userData.endZ = direction > 0 ? maxZ : minZ; // z=20 for direction=1, z=-18 otherwise
+        item.userData.endZ = direction > 0 ? maxZ : minZ;
     } else {
         xPos = Math.random() * 12 - 6; // x = -6 to 6
         const minZ = -18;
@@ -403,10 +421,21 @@ function createItem() {
             const dx = xPos - existing.position.x;
             const dz = item.position.z - existing.position.z;
             const distance = Math.sqrt(dx * dx + dz * dz);
-            return distance < (shape.radius + (existing.geometry.type === 'BoxGeometry' ? 1.125 : existing.geometry.type === 'TetrahedronGeometry' ? 0.75 : existing.geometry.type === 'ConeGeometry' ? 1.5 : existing.geometry.type === 'IcosahedronGeometry' ? 1 : 1.5));
+            const existingRadius = existing.geometry.type === 'BoxGeometry' ? 1.125 :
+                                  existing.geometry.type === 'TetrahedronGeometry' ? 0.75 :
+                                  existing.geometry.type === 'ConeGeometry' ? 1.5 :
+                                  existing.geometry.type === 'IcosahedronGeometry' ? 1 : 1.5;
+            return distance < (shape.radius + existingRadius);
         });
         if (!isOverlapping) break;
-        if (attempts === maxAttempts - 1) return;
+        if (attempts === maxAttempts - 1) {
+            console.warn('Max spawn attempts reached, item not spawned');
+            return;
+        }
+        // Adjust xPos for next attempt
+        xPos = currentLevel >= 26 ? 
+               (conveyorChoice === 'left' ? Math.random() * 10 - 12.5 : Math.random() * 10 + 2.5) :
+               Math.random() * 12 - 6;
     }
     
     item.castShadow = true;
@@ -432,6 +461,172 @@ function createItem() {
     
     scene.add(item);
     items.push(item);
+
+    // Auto Sort logic
+    if (autoSortCount > 0 && item.userData.needsSorting && window.bins && window.bins.length > 0) {
+        const bin = window.bins.find(b => b.color === item.material.color.getHex());
+        if (!bin) {
+            console.warn(`No matching bin found for item color ${item.material.color.getHexString()}`);
+            return;
+        }
+        item.position.copy(bin.mesh.position);
+        item.position.y += 1.5;
+        animatePowerUp(item, 'shrink', () => {
+            createParticles(item.position, item.material.color);
+            scene.remove(item);
+            const index = items.indexOf(item);
+            if (index !== -1) items.splice(index, 1);
+            sortCount++;
+            totalItemsSorted++;
+            sessionItemsSorted++;
+            levelItemsSorted++;
+            if (item.userData.type === 'cube') {
+                redCubesSorted++;
+                shapeCounts.cube++;
+                colorCounts[0xff0000]++;
+                localStorage.setItem('redCubesSorted', redCubesSorted);
+                localStorage.setItem('shape_cube', shapeCounts.cube);
+                localStorage.setItem('color_red', colorCounts[0xff0000]);
+                redCubesSortedThisLevel++;
+                currentRedStreak++;
+                if (currentRedStreak >= 5) unlockAchievement("five_red_in_row");
+                currentBlueStreak = 0;
+                if (redCubesSortedThisLevel >= 20) unlockAchievement("sort_20_red_in_level");
+            } else if (item.userData.type === 'triangle') {
+                blueTrianglesSorted++;
+                shapeCounts.triangle++;
+                colorCounts[0x0000ff]++;
+                localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
+                localStorage.setItem('shape_triangle', shapeCounts.triangle);
+                localStorage.setItem('color_blue', colorCounts[0x0000ff]);
+                blueTrianglesSortedThisLevel++;
+                currentBlueStreak++;
+                if (currentBlueStreak >= 5) unlockAchievement("five_blue_in_row");
+                currentRedStreak = 0;
+                if (blueTrianglesSortedThisLevel >= 20) unlockAchievement("sort_20_blue_in_level");
+            } else if (item.userData.type === 'sphere') {
+                yellowSpheresSorted++;
+                shapeCounts.sphere++;
+                colorCounts[0xffff00]++;
+                localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
+                localStorage.setItem('shape_sphere', shapeCounts.sphere);
+                localStorage.setItem('color_yellow', colorCounts[0xffff00]);
+                yellowSpheresSortedThisLevel++;
+                if (yellowSpheresSortedThisLevel >= 20) unlockAchievement("sort_20_yellow_in_level");
+            } else if (item.userData.type === 'cone') {
+                greenConesSorted++;
+                shapeCounts.cone++;
+                colorCounts[0x00ff00]++;
+                localStorage.setItem('greenConesSorted', greenConesSorted);
+                localStorage.setItem('shape_cone', shapeCounts.cone);
+                localStorage.setItem('color_green', colorCounts[0x00ff00]);
+                greenConesSortedThisLevel++;
+                if (greenConesSortedThisLevel >= 20) unlockAchievement("sort_20_green_in_level");
+            }
+            localStorage.setItem('totalItemsSorted', totalItemsSorted);
+            checkSortingAchievements();
+            neededCountDisplay.textContent = Math.min(sortCount, itemsNeeded);
+            topSortedCountDisplay.textContent = Math.max(sortCount, topSortedPerLevel[currentLevel]);
+            topSortedPerLevel[currentLevel] = Math.max(sortCount, topSortedPerLevel[currentLevel]);
+            progressBar.style.width = `${Math.min((sortCount / itemsNeeded) * 100, 100)}%`;
+            if (!isMutedSounds) {
+                console.log('Playing success sound');
+                successSound.play().catch(e => console.log('Error playing success sound:', e));
+            }
+            currentStreak++;
+            if (currentStreak >= 10) unlockAchievement("combo_king");
+            if (currentStreak >= 20) unlockAchievement("sort_20_in_row");
+            if (currentStreak >= 50) unlockAchievement("sort_50_in_row");
+
+            sortedShapesThisLevel.add(item.userData.type);
+            const currentColor = item.material.color.getHex();
+            if (currentColor === lastSortedColor) {
+                consecutiveColorStreak++;
+                if (consecutiveColorStreak >= 5) unlockAchievement("color_coordinator");
+            } else {
+                consecutiveColorStreak = 1;
+                lastSortedColor = currentColor;
+            }
+            if (firstSortInLevel) {
+                firstSortInLevel = false;
+                unlockAchievement("lucky_sorter");
+            }
+            if (sortedShapesThisLevel.size >= 4) unlockAchievement("shape_shifter");
+            const timeElapsed = (Date.now() - levelStartTime) / 1000;
+            if (levelItemsSorted >= 20 && timeElapsed < 60) unlockAchievement("quick_sorter");
+            if (sessionItemsSorted >= 100) unlockAchievement("marathon_sorter");
+            for (const shape in shapeCounts) {
+                if (shapeCounts[shape] >= 50) {
+                    unlockAchievement("shape_specialist");
+                    break;
+                }
+            }
+            for (const color in colorCounts) {
+                if (colorCounts[color] >= 50) {
+                    unlockAchievement("color_specialist");
+                    break;
+                }
+            }
+            if (sortCount >= 10) unlockAchievement("sort_10_in_level");
+            if (sortCount >= 100) unlockAchievement("sort_100_in_level");
+            if (sortCount >= 1000) unlockAchievement("score_1000_in_level");
+
+            // Award XP
+            const xpGained = item.userData.xp || 0;
+            xpTowardsNext += xpGained;
+            while (xpTowardsNext >= 100 * playerLevel && playerLevel < 100) {
+                xpTowardsNext -= 100 * playerLevel;
+                playerLevel++;
+                showNotification(`Leveled up to level ${playerLevel}!`);
+            }
+            if (playerLevel >= 100) {
+                xpTowardsNext = 0;
+            }
+            localStorage.setItem('playerLevel', playerLevel);
+            localStorage.setItem('xpTowardsNext', xpTowardsNext);
+            playerLevelDisplay.textContent = `Level: ${playerLevel}`;
+            if (playerLevel < 100) {
+                xpDisplay.textContent = `XP: ${xpTowardsNext} / ${100 * playerLevel}`;
+            } else {
+                xpDisplay.textContent = 'XP: Max Level';
+            }
+
+            autoSortCount--;
+            updatePowerUpStatus();
+            if (sortCount >= itemsNeeded) {
+                console.log('Condition met, showing end level button');
+                const timeElapsed = (Date.now() - levelStartTime) / 1000;
+                if (timeElapsed < 60) unlockAchievement("speed_runner");
+                if (timeElapsed < 120) unlockAchievement("speed_demon");
+                if (!mistakesMade) unlockAchievement("perfectionist");
+                if (lives === 3) unlockAchievement("survivor");
+                if (currentLevel === 10) unlockAchievement("level_conqueror");
+                if (currentLevel === 45) unlockAchievement("master_sorter");
+                if (currentLevel == 1 && lives == 3) unlockAchievement("level_1_no_lives_lost");
+                if (lives == 3) {
+                    consecutiveLevelsNoLivesLost++;
+                    if (consecutiveLevelsNoLivesLost >= 3) unlockAchievement("three_levels_no_lives_lost");
+                    if (consecutiveLevelsNoLivesLost >= 5) unlockAchievement("five_levels_no_lives_lost");
+                } else {
+                    consecutiveLevelsNoLivesLost = 0;
+                }
+                if (currentLevel == 10 && powerUpsUsedThisLevel.size == 0) unlockAchievement("level_10_no_powerups");
+                if (lives == 1) unlockAchievement("complete_with_one_life");
+                if (timeElapsed < 60) unlockAchievement("complete_level_under_1_min");
+                if (currentLevel === 45 && levelsFailed === 0) unlockAchievement("all_levels_no_lives_lost");
+
+                if (currentLevel < 45) {
+                    levelUnlocks[currentLevel + 1] = true;
+                    localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
+                }
+                endLevelButton.style.display = 'block';
+                if (!isMutedSounds) {
+                    console.log('Playing level success sound');
+                    levelSuccessSound.play().catch(e => console.log('Error playing level success sound:', e));
+                }
+            }
+        });
+    }
 }
 
 function spawnPowerUp(type) {
@@ -449,6 +644,15 @@ function spawnPowerUp(type) {
         case 'freeze':
             shape = { type: 'powerUpFreeze', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x00ffff, radius: 1, effect: 'freeze', label: 'Freeze', xp: 0 };
             break;
+        case 'autoSort':
+            shape = { type: 'powerUpAutoSort', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0x0000ff, radius: 1, effect: 'autoSort', label: 'Auto Sort', xp: 0 };
+            break;
+        case 'magnet':
+            shape = { type: 'powerUpMagnet', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xff0000, radius: 1, effect: 'magnet', label: 'Magnet', xp: 0 };
+            break;
+        case 'speedSurge':
+            shape = { type: 'powerUpSpeedSurge', geometry: new THREE.IcosahedronGeometry(1, 1), color: 0xff69b4, radius: 1, effect: 'speedSurge', label: 'Speed Surge', xp: 0 };
+            break;
         default:
             return;
     }
@@ -456,9 +660,19 @@ function spawnPowerUp(type) {
     material.emissive.set(shape.color);
     const item = new THREE.Mesh(shape.geometry, material);
     
-    let xPos = Math.random() * 12 - 6;
+    let xPos;
+    if (currentLevel >= 26) {
+        const conveyorChoice = Math.random() < 0.5 ? 'left' : 'right';
+        if (conveyorChoice === 'left') {
+            xPos = Math.random() * 10 - 12.5; // x = -12.5 to -2.5
+        } else {
+            xPos = Math.random() * 10 + 2.5; // x = 2.5 to 12.5
+        }
+    } else {
+        xPos = Math.random() * 12 - 6; // x = -6 to 6
+    }
     const offset = getOffset(shape);
-    item.position.set(xPos, conveyorHeight + offset, 20); // Default spawn at z=20 for dev tools
+    item.position.set(xPos, conveyorHeight + offset, 20); // Default spawn at z=20
     item.castShadow = true;
     item.receiveShadow = true;
     item.userData.effect = shape.effect;
@@ -506,12 +720,30 @@ function updatePowerUpTextPosition(item) {
 
 function updatePowerUpStatus() {
     powerUpStatus.innerHTML = '';
+    let displayLines = [];
     if (activePowerUps.length > 0) {
+        activePowerUps.forEach(powerUp => {
+            if (powerUp.effect === 'slow') {
+                displayLines.push(`Slow: ${Math.ceil(powerUp.timer)}s`);
+            } else if (powerUp.effect === 'speed') {
+                displayLines.push(`Speed Boost: ${Math.ceil(powerUp.timer)}s`);
+            } else if (powerUp.effect === 'freeze') {
+                displayLines.push(`Freeze: ${Math.ceil(powerUp.timer)}s`);
+            } else if (powerUp.effect === 'magnet') {
+                displayLines.push(`Magnet: ${Math.ceil(powerUp.timer)}s`);
+            } else if (powerUp.effect === 'speedSurge') {
+                displayLines.push(`Speed Surge: ${Math.ceil(powerUp.timer)}s`);
+            }
+        });
+    }
+    if (autoSortCount > 0) {
+        displayLines.push(`Auto Sort: ${autoSortCount} items`);
+    }
+    if (displayLines.length > 0) {
         powerUpStatus.style.display = 'block';
-        activePowerUps.forEach((powerUp, index) => {
-            const label = powerUp.effect === 'slow' ? 'Slow' : powerUp.effect === 'speed' ? 'Speed Boost' : powerUp.effect === 'freeze' ? 'Freeze' : '';
+        displayLines.forEach((line, index) => {
             const powerUpLine = document.createElement('div');
-            powerUpLine.textContent = `${label}: ${Math.ceil(powerUp.timer)}s`;
+            powerUpLine.textContent = line;
             powerUpLine.style.marginTop = `${index * 20}px`;
             powerUpStatus.appendChild(powerUpLine);
         });
@@ -520,13 +752,41 @@ function updatePowerUpStatus() {
     }
 }
 
+function updatePowerUpCounts() {
+    document.querySelectorAll('.power-up-count').forEach(span => {
+        const type = span.getAttribute('data-type');
+        span.textContent = savedPowerUps[type];
+    });
+}
+
+function updatePlayerPowerUpMenu() {
+    document.getElementById('use-slow-count').textContent = savedPowerUps.slow;
+    document.getElementById('use-slow').disabled = savedPowerUps.slow <= 0;
+    document.getElementById('use-speed-count').textContent = savedPowerUps.speed;
+    document.getElementById('use-speed').disabled = savedPowerUps.speed <= 0;
+    document.getElementById('use-extraLife-count').textContent = savedPowerUps.extraLife;
+    document.getElementById('use-extraLife').disabled = savedPowerUps.extraLife <= 0;
+    document.getElementById('use-freeze-count').textContent = savedPowerUps.freeze;
+    document.getElementById('use-freeze').disabled = savedPowerUps.freeze <= 0;
+    document.getElementById('use-autoSort-count').textContent = savedPowerUps.autoSort;
+    document.getElementById('use-autoSort').disabled = savedPowerUps.autoSort <= 0;
+    document.getElementById('use-magnet-count').textContent = savedPowerUps.magnet;
+    document.getElementById('use-magnet').disabled = savedPowerUps.magnet <= 0;
+    document.getElementById('use-speedSurge-count').textContent = savedPowerUps.speedSurge;
+    document.getElementById('use-speedSurge').disabled = savedPowerUps.speedSurge <= 0;
+}
+
 function startSpawning() {
     if (spawnInterval) {
         clearInterval(spawnInterval);
     }
+    let currentSpawnInterval = baseSpawnInterval;
+    if (activePowerUps.some(p => p.effect === 'speedSurge')) {
+        currentSpawnInterval /= 3; // 3x spawn rate
+    }
     spawnInterval = setInterval(() => {
         if (!isPaused) createItem();
-    }, 1500);
+    }, currentSpawnInterval);
 }
 
 // Sorting Bins
@@ -703,6 +963,7 @@ levelSuccessSound.load();
 gameMusic.load();
 
 // Game State
+// Game State
 let lives = 3;
 let sortCount = 0;
 let totalItemsSorted = parseInt(localStorage.getItem('totalItemsSorted')) || 0;
@@ -759,7 +1020,10 @@ let powerUpsUsed = JSON.parse(localStorage.getItem('powerUpsUsed')) || {
     slow: false,
     speed: false,
     extraLife: false,
-    freeze: false
+    freeze: false,
+    autoSort: false,
+    magnet: false,
+    speedSurge: false
 };
 let levelItemsSorted = 0;
 
@@ -775,8 +1039,22 @@ let blueTrianglesSortedThisLevel = 0;
 let yellowSpheresSortedThisLevel = 0;
 let greenConesSortedThisLevel = 0;
 
+// NEW: Variables for new power-ups
+let autoSortCount = 0; // Tracks remaining auto-sorts
+let magnetPosition = null; // Tracks cursor position for magnet effect
+
+let savedPowerUps = JSON.parse(localStorage.getItem('savedPowerUps')) || {
+    slow: 0,
+    speed: 0,
+    extraLife: 0,
+    freeze: 0,
+    autoSort: 0,
+    magnet: 0,
+    speedSurge: 0
+};
+
 let levelUnlocks = JSON.parse(localStorage.getItem('levelUnlocks')) || {};
-for (let i = 2; i <= 45; i++) { // Changed from 60 to 45
+for (let i = 2; i <= 45; i++) {
     if (!(i in levelUnlocks)) {
         levelUnlocks[i] = false;
     }
@@ -788,6 +1066,7 @@ let currentLevel = 1;
 let itemsNeeded = 15;
 let conveyorSpeed = 0.02;
 let baseConveyorSpeed = 0.02;
+let baseSpawnInterval = 1500; // Base spawn interval in milliseconds
 let activePowerUps = [];
 
 const hearts = [
@@ -813,13 +1092,18 @@ const progressBar = document.getElementById('progress-bar');
 const powerUpStatus = document.getElementById('power-up-status');
 const playerLevelDisplay = document.getElementById('player-level-display');
 const xpDisplay = document.getElementById('xp-display');
+const topPlayerNameDisplay = document.getElementById('top-player-name');
+const topPlayerScoreDisplay = document.getElementById('top-player-score');
+const playerPowerUpMenu = document.getElementById('player-power-up-menu');
 
 const startScreen = document.getElementById('start-screen');
+const levelStartScreen = document.getElementById('level-start-screen');
 const levelSelectScreen = document.getElementById('level-select-screen');
 const levelSelectPage2 = document.getElementById('level-select-page-2');
 const levelSelectPage3 = document.getElementById('level-select-page-3');
 const levelSelectPage4 = document.getElementById('level-select-page-4');
 const levelSelectPage5 = document.getElementById('level-select-page-5');
+const levelSelectPage6 = document.getElementById('level-select-page-6');
 const gameUI = document.getElementById('game-ui');
 const pauseScreen = document.getElementById('pause-screen');
 const settingsScreen = document.getElementById('settings-screen');
@@ -846,13 +1130,11 @@ const leaderboardButton = document.getElementById('leaderboard-button');
 const leaderboardScreen = document.getElementById('leaderboard-screen');
 const leaderboardList = document.getElementById('leaderboard-list');
 const backToStartFromLeaderboard = document.getElementById('back-to-start-from-leaderboard');
-
-let selectedLevel;
-const levelStartScreen = document.getElementById('level-start-screen');
 const selectedLevelNumberDisplay = document.getElementById('selected-level-number');
-const levelStartButton = document.getElementById('level-start-button');
-const backToLevelSelectFromStart = document.getElementById('back-to-level-select-from-start');
-const backToMainMenuFromStart = document.getElementById('back-to-main-menu-from-start');
+console.log('selectedLevelNumberDisplay:', selectedLevelNumberDisplay);
+
+//idk 
+let selectedLevel = 1; // Default to Level 1
 
 // NEW: Variable to track the previous screen before opening settings
 let previousScreen = null;
@@ -875,7 +1157,7 @@ totalHoursPlayedDisplay.textContent = (totalPlayTime / 3600).toFixed(2); // Upda
 
 // New Function: Update Level Buttons
 function updateLevelButtons() {
-    for (let i = 2; i <= 75; i++) { // Changed from 60 to 75 to cover all HTML buttons
+    for (let i = 2; i <= 90; i++) { // Changed from 75 to 90 to cover all HTML buttons
         const button = document.getElementById(`level-${i}-button`);
         if (button) {
             if (i <= 45) {
@@ -935,14 +1217,17 @@ function initPowerUps3D() {
         { color: 0x800080, label: 'Slow Conveyor' },
         { color: 0x00ff00, label: 'Speed Boost' },
         { color: 0xffa500, label: 'Extra Life' },
-        { color: 0x00ffff, label: 'Freeze' }
+        { color: 0x00ffff, label: 'Freeze' },
+        { color: 0x0000ff, label: 'Auto Sort' },
+        { color: 0xff0000, label: 'Magnet' },
+        { color: 0xff69b4, label: 'Speed Surge' }
     ];
     
     powerUpTypes.forEach((type, index) => {
         const geometry = new THREE.IcosahedronGeometry(1, 1);
         const material = new THREE.MeshPhongMaterial({ color: type.color, shininess: 50 });
         const powerUp = new THREE.Mesh(geometry, material);
-        powerUp.position.set((index - 1.5) * 2.5, 0, 0);
+        powerUp.position.set((index - 3) * 2.5, 0, 0); // Adjusted to center 7 power-ups
         powerUpsScene.add(powerUp);
     });
     
@@ -979,8 +1264,8 @@ function addButtonListeners(elementId, action) {
 
 addButtonListeners('start-button', () => {
     console.log('Start button clicked/touched');
-    selectedLevel = 1;
-    selectedLevelNumberDisplay.textContent = selectedLevel;
+    console.log('selectedLevelNumberDisplay:', selectedLevelNumberDisplay);
+    selectedLevelNumberDisplay.textContent = selectedLevel; // Replace selectedLevel with your level variable
     startScreen.style.display = 'none';
     levelStartScreen.style.display = 'block';
 });
@@ -1112,6 +1397,7 @@ addButtonListeners('power-ups-button', () => {
     console.log('Power-Ups button clicked/touched');
     startScreen.style.display = 'none';
     powerUpsScreen.style.display = 'block';
+    updatePowerUpCounts();
     initPowerUps3D();
     isPowerUpsAnimating = true;
     animatePowerUps();
@@ -1233,14 +1519,21 @@ addButtonListeners('settings-from-level-complete', () => {
 });
 
 addButtonListeners('end-level-button', () => {
-    console.log('End level button clicked/touched');
+    console.log('End Level button clicked');
+    if (currentLevel % 5 === 0) {
+        for (let type in savedPowerUps) {
+            savedPowerUps[type]++;
+        }
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        showNotification('Earned one of each power-up!');
+    }
     gameUI.style.display = 'none';
     levelCompleteScreen.style.display = 'block';
     levelCompleteSortCount.textContent = sortCount;
+    completedLevelDisplay.textContent = currentLevel;
+    nextLevelDisplay.textContent = currentLevel + 1;
+    sendLevelDataToSheetDB(currentLevel, sortCount);
     cleanupGame();
-    totalLevelsPassed++;
-    localStorage.setItem('totalLevelsPassed', totalLevelsPassed);
-    sendDataToSheetDB();
 });
 
 // NEW: Updated to set previousScreen
@@ -1574,6 +1867,25 @@ addButtonListeners('back-to-start-page-5', () => {
     levelSelectPage5.style.display = 'none';
     startScreen.style.display = 'block';
 });
+addButtonListeners('next-page-button-page-5', () => {
+    console.log('Next page from page 5 clicked/touched');
+    levelSelectPage5.style.display = 'none';
+    levelSelectPage6.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 6
+});
+
+addButtonListeners('prev-page-button-page-6', () => {
+    console.log('Previous page from page 6 clicked/touched');
+    levelSelectPage6.style.display = 'none';
+    levelSelectPage5.style.display = 'block';
+    updateLevelButtons(); // Update buttons when showing page 5
+});
+
+addButtonListeners('back-to-start-page-6', () => {
+    console.log('Back to start from page 6 clicked/touched');
+    levelSelectPage6.style.display = 'none';
+    startScreen.style.display = 'block';
+});
 
 addButtonListeners('change-username', () => {
     console.log('Change Username button clicked/touched');
@@ -1598,6 +1910,119 @@ addButtonListeners('leaderboard-button', () => {
 addButtonListeners('back-to-start-from-leaderboard', () => {
     leaderboardScreen.style.display = 'none';
     startScreen.style.display = 'block';
+});
+
+addButtonListeners('spawn-auto-sort', () => {
+    console.log('Spawn Auto Sort button clicked/touched');
+    spawnPowerUp('autoSort');
+});
+addButtonListeners('spawn-magnet', () => {
+    console.log('Spawn Magnet button clicked/touched');
+    spawnPowerUp('magnet');
+});
+addButtonListeners('spawn-speed-surge', () => {
+    console.log('Spawn Speed Surge button clicked/touched');
+    spawnPowerUp('speedSurge');
+});
+
+document.getElementById('use-power-up-button').addEventListener('click', () => {
+    if (!isPaused) {
+        togglePause();
+    }
+    playerPowerUpMenu.style.display = 'block';
+    updatePlayerPowerUpMenu();
+});
+
+document.getElementById('use-slow').addEventListener('click', () => {
+    if (savedPowerUps.slow > 0) {
+        spawnPowerUp('slow');
+        savedPowerUps.slow--;
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        updatePlayerPowerUpMenu();
+        playerPowerUpMenu.style.display = 'none';
+        if (isPaused) {
+            togglePause();
+        }
+    }
+});
+document.getElementById('use-speed').addEventListener('click', () => {
+    if (savedPowerUps.speed > 0) {
+        spawnPowerUp('speed');
+        savedPowerUps.speed--;
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        updatePlayerPowerUpMenu();
+        playerPowerUpMenu.style.display = 'none';
+        if (isPaused) {
+            togglePause();
+        }
+    }
+});
+document.getElementById('use-extraLife').addEventListener('click', () => {
+    if (savedPowerUps.extraLife > 0) {
+        spawnPowerUp('extraLife');
+        savedPowerUps.extraLife--;
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        updatePlayerPowerUpMenu();
+        playerPowerUpMenu.style.display = 'none';
+        if (isPaused) {
+            togglePause();
+        }
+    }
+});
+document.getElementById('use-freeze').addEventListener('click', () => {
+    if (savedPowerUps.freeze > 0) {
+        spawnPowerUp('freeze');
+        savedPowerUps.freeze--;
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        updatePlayerPowerUpMenu();
+        playerPowerUpMenu.style.display = 'none';
+        if (isPaused) {
+            togglePause();
+        }
+    }
+});
+document.getElementById('use-autoSort').addEventListener('click', () => {
+    if (savedPowerUps.autoSort > 0) {
+        spawnPowerUp('autoSort');
+        savedPowerUps.autoSort--;
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        updatePlayerPowerUpMenu();
+        playerPowerUpMenu.style.display = 'none';
+        if (isPaused) {
+            togglePause();
+        }
+    }
+});
+document.getElementById('use-magnet').addEventListener('click', () => {
+    if (savedPowerUps.magnet > 0) {
+        spawnPowerUp('magnet');
+        savedPowerUps.magnet--;
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        updatePlayerPowerUpMenu();
+        playerPowerUpMenu.style.display = 'none';
+        if (isPaused) {
+            togglePause();
+        }
+    }
+});
+document.getElementById('use-speedSurge').addEventListener('click', () => {
+    if (savedPowerUps.speedSurge > 0) {
+        spawnPowerUp('speedSurge');
+        savedPowerUps.speedSurge--;
+        localStorage.setItem('savedPowerUps', JSON.stringify(savedPowerUps));
+        updatePlayerPowerUpMenu();
+        playerPowerUpMenu.style.display = 'none';
+        if (isPaused) {
+            togglePause();
+        }
+    }
+});
+
+document.getElementById('back-to-game').addEventListener('click', () => {
+    playerPowerUpMenu.style.display = 'none';
+    if (isPaused) {
+        togglePause();
+    }
 });
 
 // Achievement Functions
@@ -1750,6 +2175,9 @@ function resetGameState() {
     blueTrianglesSortedThisLevel = 0;
     yellowSpheresSortedThisLevel = 0;
     greenConesSortedThisLevel = 0;
+    // NEW: Reset new power-up states
+    autoSortCount = 0;
+    magnetPosition = null;
 }
 
 function startGame(level) {
@@ -1795,6 +2223,7 @@ function startGame(level) {
     } else {
         xpDisplay.textContent = 'XP: Max Level';
     }
+    fetchTopPlayerForLevel(currentLevel);
 }
 
 function cleanupBins() {
@@ -1905,11 +2334,21 @@ function onStart(event) {
 
 function onMove(event) {
     event.preventDefault();
-    if (selectedItem && !isPaused) {
-        const pos = getEventPosition(event);
-        mouse.x = (pos.x / window.innerWidth) * 2 - 1;
-        mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
+    const pos = getEventPosition(event);
+    mouse.x = (pos.x / window.innerWidth) * 2 - 1;
+    mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
 
+    // Update magnet position
+    if (activePowerUps.some(p => p.effect === 'magnet')) {
+        raycaster.setFromCamera(mouse, camera);
+        const intersectPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
+            magnetPosition = intersectPoint.clone();
+            magnetPosition.z = Math.max(-18, Math.min(20, magnetPosition.z));
+        }
+    }
+
+    if (selectedItem && !isPaused) {
         raycaster.setFromCamera(mouse, camera);
         const intersectPoint = new THREE.Vector3();
         if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
@@ -1962,7 +2401,6 @@ function onEnd(event) {
                             }
                             powerUpsUsed.slow = true;
                             powerUpsUsedThisLevel.add('slow');
-                            // NEW: Unlock Slow Starter achievement on first use
                             unlockAchievement("first_slow_powerup");
                         } else if (sortedItem.userData.effect === 'speed') {
                             const existingSpeed = activePowerUps.find(p => p.effect === 'speed');
@@ -1991,18 +2429,40 @@ function onEnd(event) {
                             }
                             powerUpsUsed.freeze = true;
                             powerUpsUsedThisLevel.add('freeze');
+                        } else if (sortedItem.userData.effect === 'autoSort') {
+                            autoSortCount += 5;
+                            powerUpsUsed.autoSort = true;
+                            powerUpsUsedThisLevel.add('autoSort');
+                            showNotification('Auto Sort Activated: 5 items');
+                        } else if (sortedItem.userData.effect === 'magnet') {
+                            const existingMagnet = activePowerUps.find(p => p.effect === 'magnet');
+                            if (existingMagnet) {
+                                existingMagnet.timer += 5;
+                            } else {
+                                activePowerUps.push({ effect: 'magnet', timer: 5 });
+                            }
+                            powerUpsUsed.magnet = true;
+                            powerUpsUsedThisLevel.add('magnet');
+                        } else if (sortedItem.userData.effect === 'speedSurge') {
+                            const existingSpeedSurge = activePowerUps.find(p => p.effect === 'speedSurge');
+                            if (existingSpeedSurge) {
+                                existingSpeedSurge.timer += 5;
+                            } else {
+                                activePowerUps.push({ effect: 'speedSurge', timer: 5 });
+                            }
+                            powerUpsUsed.speedSurge = true;
+                            powerUpsUsedThisLevel.add('speedSurge');
+                            startSpawning(); // Update spawn interval
                         }
                         totalPowerUpsCollected++;
                         localStorage.setItem('totalPowerUpsCollected', totalPowerUpsCollected);
                         localStorage.setItem('powerUpsUsed', JSON.stringify(powerUpsUsed));
-                        // NEW: Increment power-ups sorted this level
                         powerUpsSortedThisLevel++;
                         if (powerUpsSortedThisLevel >= 10) unlockAchievement("sort_10_powerups_in_level");
-                        // NEW: Check for all power-ups in a level
                         if (powerUpsUsedThisLevel.size >= 4) unlockAchievement("all_powerups_in_level");
                         
                         if (totalPowerUpsCollected >= 10) unlockAchievement("power_up_collector");
-                        if (powerUpsUsed.slow && powerUpsUsed.speed && powerUpsUsed.extraLife && powerUpsUsed.freeze) unlockAchievement("power_up_master");
+                        if (powerUpsUsed.slow && powerUpsUsed.speed && powerUpsUsed.extraLife && powerUpsUsed.freeze && powerUpsUsed.autoSort && powerUpsUsed.magnet && powerUpsUsed.speedSurge) unlockAchievement("power_up_master");
                         if (powerUpsUsedThisLevel.size >= 3) unlockAchievement("power_up_pro");
 
                         updatePowerUpStatus();
@@ -2019,7 +2479,6 @@ function onEnd(event) {
                             }
                             currentStreak++;
                             if (currentStreak >= 10) unlockAchievement("combo_king");
-                            // NEW: Check streak achievements
                             if (currentStreak >= 20) unlockAchievement("sort_20_in_row");
                             if (currentStreak >= 50) unlockAchievement("sort_50_in_row");
                         });
@@ -2032,7 +2491,7 @@ function onEnd(event) {
                                 const index = items.indexOf(sortedItem);
                                 if (index !== -1) items.splice(index, 1);
                                 sortCount++;
-                                console.log('Sorted item, sortCount =', sortCount, 'itemsNeeded =', itemsNeeded); // Added console log
+                                console.log('Sorted item, sortCount =', sortCount, 'itemsNeeded =', itemsNeeded);
                                 totalItemsSorted++;
                                 sessionItemsSorted++;
                                 levelItemsSorted++;
@@ -2043,7 +2502,6 @@ function onEnd(event) {
                                     localStorage.setItem('redCubesSorted', redCubesSorted);
                                     localStorage.setItem('shape_cube', shapeCounts.cube);
                                     localStorage.setItem('color_red', colorCounts[0xff0000]);
-                                    // NEW: Handle red cube streak and level count
                                     redCubesSortedThisLevel++;
                                     currentRedStreak++;
                                     if (currentRedStreak >= 5) unlockAchievement("five_red_in_row");
@@ -2056,7 +2514,6 @@ function onEnd(event) {
                                     localStorage.setItem('blueTrianglesSorted', blueTrianglesSorted);
                                     localStorage.setItem('shape_triangle', shapeCounts.triangle);
                                     localStorage.setItem('color_blue', colorCounts[0x0000ff]);
-                                    // NEW: Handle blue triangle streak and level count
                                     blueTrianglesSortedThisLevel++;
                                     currentBlueStreak++;
                                     if (currentBlueStreak >= 5) unlockAchievement("five_blue_in_row");
@@ -2069,7 +2526,6 @@ function onEnd(event) {
                                     localStorage.setItem('yellowSpheresSorted', yellowSpheresSorted);
                                     localStorage.setItem('shape_sphere', shapeCounts.sphere);
                                     localStorage.setItem('color_yellow', colorCounts[0xffff00]);
-                                    // NEW: Handle yellow sphere level count
                                     yellowSpheresSortedThisLevel++;
                                     if (yellowSpheresSortedThisLevel >= 20) unlockAchievement("sort_20_yellow_in_level");
                                 } else if (sortedItem.userData.type === 'cone') {
@@ -2079,7 +2535,6 @@ function onEnd(event) {
                                     localStorage.setItem('greenConesSorted', greenConesSorted);
                                     localStorage.setItem('shape_cone', shapeCounts.cone);
                                     localStorage.setItem('color_green', colorCounts[0x00ff00]);
-                                    // NEW: Handle green cone level count
                                     greenConesSortedThisLevel++;
                                     if (greenConesSortedThisLevel >= 20) unlockAchievement("sort_20_green_in_level");
                                 }
@@ -2095,7 +2550,6 @@ function onEnd(event) {
                                 }
                                 currentStreak++;
                                 if (currentStreak >= 10) unlockAchievement("combo_king");
-                                // NEW: Check streak achievements
                                 if (currentStreak >= 20) unlockAchievement("sort_20_in_row");
                                 if (currentStreak >= 50) unlockAchievement("sort_50_in_row");
 
@@ -2128,7 +2582,6 @@ function onEnd(event) {
                                         break;
                                     }
                                 }
-                                // NEW: Check per-level sorting achievements
                                 if (sortCount >= 10) unlockAchievement("sort_10_in_level");
                                 if (sortCount >= 100) unlockAchievement("sort_100_in_level");
                                 if (sortCount >= 1000) unlockAchievement("score_1000_in_level");
@@ -2146,7 +2599,6 @@ function onEnd(event) {
                                 }
                                 localStorage.setItem('playerLevel', playerLevel);
                                 localStorage.setItem('xpTowardsNext', xpTowardsNext);
-                                // Update in-game display
                                 playerLevelDisplay.textContent = `Level: ${playerLevel}`;
                                 if (playerLevel < 100) {
                                     xpDisplay.textContent = `XP: ${xpTowardsNext} / ${100 * playerLevel}`;
@@ -2155,7 +2607,7 @@ function onEnd(event) {
                                 }
 
                                 if (sortCount >= itemsNeeded) {
-                                    console.log('Condition met, showing end level button'); // Added console log
+                                    console.log('Condition met, showing end level button');
                                     const timeElapsed = (Date.now() - levelStartTime) / 1000;
                                     if (timeElapsed < 60) unlockAchievement("speed_runner");
                                     if (timeElapsed < 120) unlockAchievement("speed_demon");
@@ -2163,7 +2615,6 @@ function onEnd(event) {
                                     if (lives === 3) unlockAchievement("survivor");
                                     if (currentLevel === 10) unlockAchievement("level_conqueror");
                                     if (currentLevel === 45) unlockAchievement("master_sorter");
-                                    // NEW: Level-specific and consecutive level achievements
                                     if (currentLevel == 1 && lives == 3) unlockAchievement("level_1_no_lives_lost");
                                     if (lives == 3) {
                                         consecutiveLevelsNoLivesLost++;
@@ -2175,13 +2626,11 @@ function onEnd(event) {
                                     if (currentLevel == 10 && powerUpsUsedThisLevel.size == 0) unlockAchievement("level_10_no_powerups");
                                     if (lives == 1) unlockAchievement("complete_with_one_life");
                                     if (timeElapsed < 60) unlockAchievement("complete_level_under_1_min");
-                                    // Note: "all imposes_no_lives_lost" is checked but may need refinement
                                     if (currentLevel === 45 && levelsFailed === 0) unlockAchievement("all_levels_no_lives_lost");
 
                                     if (currentLevel < 45) {
                                         levelUnlocks[currentLevel + 1] = true;
                                         localStorage.setItem('levelUnlocks', JSON.stringify(levelUnlocks));
-                                        // Removed reference to levelButtons
                                     }
                                     endLevelButton.style.display = 'block';
                                     if (!isMutedSounds) {
@@ -2263,6 +2712,7 @@ function loseLife() {
         gameOverSortCount.textContent = sortCount;
         gameOverNeededCount.textContent = itemsNeeded;
         cleanupGame();
+        sendLevelDataToSheetDB(currentLevel, sortCount);
         sendDataToSheetDB();
     }
 }
@@ -2307,7 +2757,7 @@ function animate(timestamp) {
     lastTime = timestamp;
 
     if (!isPaused) {
-        totalPlayTime += delta; // Accumulate totalPlayTime when game is not paused
+        totalPlayTime += delta;
     }
 
     if (!isPaused && beltMaterial && beltMaterial.map) {
@@ -2316,9 +2766,12 @@ function animate(timestamp) {
             const hasFreeze = activePowerUps.some(p => p.effect === 'freeze');
             const hasSpeed = activePowerUps.some(p => p.effect === 'speed');
             const hasSlow = activePowerUps.some(p => p.effect === 'slow');
+            const hasSpeedSurge = activePowerUps.some(p => p.effect === 'speedSurge');
             
             if (hasFreeze) {
                 conveyorSpeed = 0;
+            } else if (hasSpeedSurge) {
+                conveyorSpeed = baseConveyorSpeed * 3;
             } else if (hasSpeed) {
                 conveyorSpeed = baseConveyorSpeed * 2;
             } else if (hasSlow) {
@@ -2329,6 +2782,9 @@ function animate(timestamp) {
                 powerUp.timer -= delta;
                 if (powerUp.timer <= 0) {
                     activePowerUps.splice(idx, 1);
+                    if (powerUp.effect === 'speedSurge') {
+                        startSpawning(); // Reset spawn interval
+                    }
                 }
             });
             updatePowerUpStatus();
@@ -2347,6 +2803,20 @@ function animate(timestamp) {
                 const speed = conveyorSpeed;
                 item.position.z += (item.userData.direction > 0 ? 1 : -1) * speed;
                 item.rotation.y += 0.02;
+                
+                // Magnet effect
+                if (magnetPosition && activePowerUps.some(p => p.effect === 'magnet') && !item.userData.isPowerUp) {
+                    const direction = magnetPosition.clone().sub(item.position);
+                    const distance = direction.length();
+                    if (distance > 0.1) {
+                        direction.normalize();
+                        const attractionSpeed = 0.1 * delta * 50; // Adjust speed as needed
+                        item.position.add(direction.multiplyScalar(Math.min(attractionSpeed, distance)));
+                        item.position.z = Math.max(-18, Math.min(20, item.position.z));
+                        updatePowerUpTextPosition(item);
+                    }
+                }
+
                 if ((item.userData.direction > 0 && item.position.z > item.userData.endZ) || (item.userData.direction < 0 && item.position.z < item.userData.endZ)) {
                     toRemove.push(index);
                 } else {
@@ -2433,44 +2903,171 @@ function sendDataToSheetDB() {
 function fetchLeaderboard() {
     leaderboardList.innerHTML = 'Loading...';
     fetch('https://sheetdb.io/api/v1/alykvz0kwp4lg')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!Array.isArray(data) || data.length === 0) {
+                leaderboardList.innerHTML = 'No data available.';
+                return;
+            }
+
             const latestEntries = {};
             data.forEach(entry => {
+                // Ensure entry has required properties
+                if (!entry || typeof entry.username !== 'string' || !entry.timestamp) {
+                    console.warn('Invalid entry in leaderboard data:', entry);
+                    return;
+                }
                 const parsedEntry = {
                     username: entry.username,
-                    totalItemsSorted: parseInt(entry.totalItemsSorted, 10),
-                    levelsPassed: parseInt(entry.levelsPassed, 10),
-                    levelsFailed: parseInt(entry.levelsFailed, 10),
-                    totalHoursPlayed: parseFloat(entry.totalHoursPlayed),
+                    totalItemsSorted: parseInt(entry.totalItemsSorted, 10) || 0,
+                    levelsPassed: parseInt(entry.levelsPassed, 10) || 0,
+                    levelsFailed: parseInt(entry.levelsFailed, 10) || 0,
+                    totalHoursPlayed: parseFloat(entry.totalHoursPlayed) || 0,
                     timestamp: entry.timestamp
                 };
                 if (!latestEntries[parsedEntry.username] || new Date(parsedEntry.timestamp) > new Date(latestEntries[parsedEntry.username].timestamp)) {
                     latestEntries[parsedEntry.username] = parsedEntry;
                 }
             });
+
             const latestData = Object.values(latestEntries);
-            if (latestData.length > 0) {
-                const maxItemsSorted = Math.max(...latestData.map(entry => entry.totalItemsSorted));
-                const topSorter = latestData.find(entry => entry.totalItemsSorted === maxItemsSorted);
-                const maxLevelsPassed = Math.max(...latestData.map(entry => entry.levelsPassed));
-                const topLevelsPassed = latestData.find(entry => entry.levelsPassed === maxLevelsPassed);
-                const maxLevelsFailed = Math.max(...latestData.map(entry => entry.levelsFailed));
-                const topLevelsFailed = latestData.find(entry => entry.levelsFailed === maxLevelsFailed);
-                const maxHoursPlayed = Math.max(...latestData.map(entry => entry.totalHoursPlayed));
-                const topHoursPlayed = latestData.find(entry => entry.totalHoursPlayed === maxHoursPlayed);
-                leaderboardList.innerHTML = `
-                    <p>Top Sorter: ${topSorter.username} - ${topSorter.totalItemsSorted} items</p>
-                    <p>Most Levels Passed: ${topLevelsPassed.username} - ${topLevelsPassed.levelsPassed} levels</p>
-                    <p>Most Levels Failed: ${topLevelsFailed.username} - ${topLevelsFailed.levelsFailed} levels</p>
-                    <p>Longest Play Time: ${topHoursPlayed.username} - ${topHoursPlayed.totalHoursPlayed.toFixed(2)} hours</p>
-                `;
-            } else {
-                leaderboardList.innerHTML = 'No data available.';
+            if (latestData.length === 0) {
+                leaderboardList.innerHTML = 'No valid data available.';
+                return;
             }
+
+            // Sort for Top Sorters (totalItemsSorted)
+            const topSorters = latestData
+                .sort((a, b) => b.totalItemsSorted - a.totalItemsSorted)
+                .slice(0, 3);
+            const topSortersHTML = topSorters.length > 0
+                ? topSorters.map((entry, index) => 
+                    `<p>${index + 1}. ${entry.username} - ${entry.totalItemsSorted} items</p>`
+                  ).join('')
+                : '<p>No sorters available.</p>';
+
+            // Sort for Most Levels Passed
+            const topLevelsPassed = latestData
+                .sort((a, b) => b.levelsPassed - a.levelsPassed)
+                .slice(0, 3);
+            const topLevelsPassedHTML = topLevelsPassed.length > 0
+                ? topLevelsPassed.map((entry, index) => 
+                    `<p>${index + 1}. ${entry.username} - ${entry.levelsPassed} levels</p>`
+                  ).join('')
+                : '<p>No levels passed data available.</p>';
+
+            // Sort for Most Levels Failed
+            const topLevelsFailed = latestData
+                .sort((a, b) => b.levelsFailed - a.levelsFailed)
+                .slice(0, 3);
+            const topLevelsFailedHTML = topLevelsFailed.length > 0
+                ? topLevelsFailed.map((entry, index) => 
+                    `<p>${index + 1}. ${entry.username} - ${entry.levelsFailed} levels</p>`
+                  ).join('')
+                : '<p>No levels failed data available.</p>';
+
+            // Sort for Longest Play Time
+            const topHoursPlayed = latestData
+                .sort((a, b) => b.totalHoursPlayed - a.totalHoursPlayed)
+                .slice(0, 3);
+            const topHoursPlayedHTML = topHoursPlayed.length > 0
+                ? topHoursPlayed.map((entry, index) => 
+                    `<p>${index + 1}. ${entry.username} - ${entry.totalHoursPlayed.toFixed(2)} hours</p>`
+                  ).join('')
+                : '<p>No play time data available.</p>';
+
+            // Combine all categories with headers
+            leaderboardList.innerHTML = `
+                <h3>Top Sorters</h3>
+                ${topSortersHTML}
+                <h3>Most Levels Passed</h3>
+                ${topLevelsPassedHTML}
+                <h3>Most Levels Failed</h3>
+                ${topLevelsFailedHTML}
+                <h3>Longest Play Time</h3>
+                ${topHoursPlayedHTML}
+            `;
         })
         .catch(error => {
             console.error('Error fetching leaderboard:', error);
             leaderboardList.innerHTML = 'Error loading leaderboard.';
         });
+}
+
+function fetchTopPlayerForLevel(level) {
+    fetch(`https://sheetdb.io/api/v1/alykvz0kwp4lg?level=${level}&sort_by=score&sort_order=desc&limit=1`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!Array.isArray(data) || data.length === 0 || !data[0].username || !data[0].score) {
+                topPlayerNameDisplay.textContent = "No top player yet";
+                topPlayerScoreDisplay.textContent = "0";
+                return;
+            }
+            const topPlayer = data[0];
+            topPlayerNameDisplay.textContent = topPlayer.username;
+            topPlayerScoreDisplay.textContent = topPlayer.score;
+        })
+        .catch(error => {
+            console.error('Error fetching top player:', error);
+            topPlayerNameDisplay.textContent = "Error";
+            topPlayerScoreDisplay.textContent = "0";
+        });
+}
+
+function fetchTopPlayerForLevel(level) {
+    fetch(`https://sheetdb.io/api/v1/alykvz0kwp4lg?level=${level}&sort_by=score&sort_order=desc&limit=1`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const topPlayer = data[0];
+                topPlayerNameDisplay.textContent = topPlayer.username;
+                topPlayerScoreDisplay.textContent = topPlayer.score;
+            } else {
+                topPlayerNameDisplay.textContent = "No top player yet";
+                topPlayerScoreDisplay.textContent = "0";
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching top player:', error);
+            topPlayerNameDisplay.textContent = "Error";
+            topPlayerScoreDisplay.textContent = "0";
+        });
+}
+
+function sendLevelDataToSheetDB(level, score) {
+    const data = {
+        "data": [
+            {
+                "username": username,
+                "level": level,
+                "score": score,
+                "timestamp": new Date().toISOString()
+            }
+        ]
+    };
+    fetch('https://sheetdb.io/api/v1/alykvz0kwp4lg', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            console.error('Error sending level data to SheetDB:', response.statusText);
+        }
+    })
+    .catch(error => {
+        console.error('Error sending level data to SheetDB:', error);
+    });
 }

@@ -11,12 +11,12 @@ body {
     touch-action: none; /* NEW: Prevents default touch behaviors */
 }
 
-#start-screen, #pause-screen, #settings-screen, #level-select-screen, #level-select-page-2, #level-select-page-3, #level-select-page-4, #level-select-page-5, #game-over-screen, #level-complete-screen, #instructions-screen, #stats-screen, #achievements-screen, #dev-tools-bubble, #power-up-menu, #level-start-screen, #power-ups-screen, #updates-screen {
+#start-screen, #pause-screen, #settings-screen, #level-select-screen, #level-select-page-2, #level-select-page-3, #level-select-page-4, #level-select-page-5, #level-select-page-6, #game-over-screen, #level-complete-screen, #instructions-screen, #stats-screen, #achievements-screen, #dev-tools-bubble, #power-up-menu, #level-start-screen, #power-ups-screen, #updates-screen {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(50, 50, 50, 0.9) url('https://threejs.org/examples/textures/metal_diffuse.jpg') repeat; /* Metallic texture */
+    background: rgba(50, 50, 50, 0.9) url('https://threejs.org/examples/textures/metal_diffuse.jpg') repeat;
     padding: 30px;
     border-radius: 15px;
     color: #ffffff;
@@ -34,28 +34,36 @@ body {
     display: flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.1); /* Matches achievements semi-transparent background */
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    margin: 7px 0; /* Reduced from 10px */
+    padding: 7px; /* Reduced from 10px */
+    border-radius: 3.5px; /* Reduced from 5px */
+    box-shadow: 0 0 3.5px rgba(0, 0, 0, 0.5); /* Reduced from 5px */
     color: #ffffff;
+    font-size: 12.6px; /* Reduced from 18px to 12.6px (18 * 0.7) */
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline matching achievements */
 }
 
 #power-ups-screen li:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 10.5px rgba(0, 0, 0, 0.7); /* Reduced from 15px */
 }
 
 #power-ups-screen img {
-    margin-right: 10px;
-    width: 50px;
-    height: 50px;
+    margin-right: 7px; /* Reduced from 10px */
+    width: 35px; /* Reduced from 50px */
+    height: 35px; /* Reduced from 50px */
 }
 
 #power-ups-screen li strong {
     color: #ffd700; /* Gold color */
     font-weight: bold;
+    font-size: 12.6px; /* Reduced from 18px to 12.6px (18 * 0.7) */
+}
+
+#power-ups-screen p {
+    font-size: 12.6px; /* Set to 12.6px (18 * 0.7) to match scaled text */
+    margin: 7px 0; /* Reduced from typical 10px to 7px */
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 
 #start-screen .columns {
@@ -85,9 +93,9 @@ body {
 }
 
 #power-ups-screen h2 {
-    margin: 0 0 25px;
+    margin: 0 0 17.5px; /* Reduced from 25px */
     font-family: 'Orbitron', sans-serif;
-    font-size: 48px; /* Increased for prominence */
+    font-size: 33.6px; /* Reduced from 48px to 33.6px (48 * 0.7) */
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 
@@ -98,7 +106,7 @@ body {
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 
-#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #level-select-page-3 button, #level-select-page-4 button, #level-select-page-5 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #achievements-screen button:not(.tab-button), #dev-tools-bubble button, #power-up-menu button, #level-start-screen button, #updates-screen button, #power-ups-screen button {
+#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #level-select-page-3 button, #level-select-page-4 button, #level-select-page-5 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #achievements-screen button:not(.tab-button), #dev-tools-bubble button, #power-up-menu button, #level-start-screen button, #updates-screen button, #power-ups-screen button, #leaderboard-screen button {
     display: block;
     margin: 15px auto;
     padding: 12px 25px;
@@ -112,7 +120,7 @@ body {
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 
-#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #level-select-page-3 button:hover, #level-select-page-4 button:hover, #level-select-page-5 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #achievements-screen button:not(.tab-button):hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover, #updates-screen button:hover, #power-ups-screen button:hover {
+#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #level-select-page-3 button:hover, #level-select-page-4 button:hover, #level-select-page-5 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #achievements-screen button:not(.tab-button):hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover, #updates-screen button:hover, #power-ups-screen button:hover, #leaderboard-screen button:hover {
     background: linear-gradient(135deg, #218838, #1e7e34);
     transform: scale(1.05); /* Slight enlargement */
 }
@@ -148,7 +156,7 @@ body {
     width: 150px;
 }
 
-#level-select-screen, #level-select-page-2, #level-select-page-3, #level-select-page-4, #level-select-page-5 {
+#level-select-screen, #level-select-page-2, #level-select-page-3, #level-select-page-4, #level-select-page-5, #level-select-page-6 {
     transform: translate(-50%, -50%) scale(0.75);
 }
 
@@ -603,4 +611,25 @@ body {
     font-size: 18px;
     margin: 5px 0;
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+#top-player-container {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffffff;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    padding: 4px 8px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    z-index: 10;
+}
+
+#power-ups-3d {
+    width: 100%;
+    height: 100px; /* Reduced from 200px to 100px (50% reduction) */
+    margin: 14px 0; /* Reduced from 20px to 14px (20 * 0.7) */
 }
