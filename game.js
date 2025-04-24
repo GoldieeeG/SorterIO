@@ -2293,6 +2293,7 @@ function cleanupGame() {
     items.length = 0;
     particles.forEach(particle => scene.remove(particle));
     particles.length = 0;
+    selectedItem = null; // Ensure no lingering drag
     localStorage.setItem('totalPlayTime', totalPlayTime); // Save totalPlayTime when cleaning up
 }
 
@@ -2338,6 +2339,7 @@ function onStart(event) {
 
 function onMove(event) {
     event.preventDefault();
+    if (isPaused) return; // Prevent movement when paused
     const pos = getEventPosition(event);
     mouse.x = (pos.x / window.innerWidth) * 2 - 1;
     mouse.y = -(pos.y / window.innerHeight) * 2 + 1;
@@ -2352,11 +2354,7 @@ function onMove(event) {
         }
     }
 
-    if (selectedItem && !isPaused) {
-        if (!selectedItem.userData || !selectedItem.userData.type) {
-            console.error('selectedItem has no userData.type', selectedItem);
-            return; // Skip this frame to prevent crash
-        }
+    if (selectedItem) {
         raycaster.setFromCamera(mouse, camera);
         const intersectPoint = new THREE.Vector3();
         if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
