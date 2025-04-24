@@ -2772,12 +2772,13 @@ endLevelButton.addEventListener('click', () => {
 
 document.getElementById('start-next-level').addEventListener('click', () => {
     levelCompleteScreen.style.display = 'none';
+    levelStartScreen.style.display = 'none'; // Ensure level start screen is hidden
     gameUI.style.display = 'block';
     if (currentLevel < 45) {
         startGame(currentLevel + 1);
     } else {
         console.log('All levels completed!');
-        startScreen.style.display = 'block'; // Return to start screen when max level is reached
+        startScreen.style.display = 'block';
         gameUI.style.display = 'none';
     }
 });
