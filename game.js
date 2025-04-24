@@ -2757,6 +2757,23 @@ function animatePowerUp(item, type, callback) {
     requestAnimationFrame(animate);
 }
 
+endLevelButton.addEventListener('click', () => {
+    totalLevelsPassed++;
+    localStorage.setItem('totalLevelsPassed', totalLevelsPassed);
+    sendLevelDataToSheetDB(currentLevel, sortCount);
+    sendDataToSheetDB();
+    cleanupGame();
+    levelCompleteScreen.style.display = 'block';
+    gameUI.style.display = 'none';
+    levelCompleteSortCount.textContent = sortCount;
+    if (currentLevel < 45) {
+        startGame(currentLevel + 1);
+    } else {
+        // Handle max level reached, if desired
+        console.log('All levels completed!');
+    }
+});
+
 let lastTime = 0;
 function animate(timestamp) {
     requestAnimationFrame(animate);
