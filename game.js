@@ -2766,11 +2766,21 @@ endLevelButton.addEventListener('click', () => {
     levelCompleteScreen.style.display = 'block';
     gameUI.style.display = 'none';
     levelCompleteSortCount.textContent = sortCount;
+    if (currentLevel >= 45) {
+        console.log('All levels completed!');
+        // Optionally, handle the case when all levels are completed
+    }
+});
+
+document.getElementById('start-next-level').addEventListener('click', () => {
+    levelCompleteScreen.style.display = 'none';
+    gameUI.style.display = 'block';
     if (currentLevel < 45) {
         startGame(currentLevel + 1);
     } else {
-        // Handle max level reached, if desired
         console.log('All levels completed!');
+        startScreen.style.display = 'block'; // Return to start screen when max level is reached
+        gameUI.style.display = 'none';
     }
 });
 
