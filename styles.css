@@ -106,7 +106,7 @@ body {
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 
-#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #level-select-page-3 button, #level-select-page-4 button, #level-select-page-5 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #achievements-screen button:not(.tab-button), #dev-tools-bubble button, #power-up-menu button, #level-start-screen button, #updates-screen button, #power-ups-screen button, #leaderboard-screen button {
+#start-screen button, #pause-screen button, #settings-screen button, #level-select-screen button, #level-select-page-2 button, #level-select-page-3 button, #level-select-page-4 button, #level-select-page-5 button, #level-select-page-6 button, #game-over-screen button, #level-complete-screen button, #instructions-screen button, #stats-screen button, #achievements-screen button:not(.tab-button), #dev-tools-bubble button, #power-up-menu button, #level-start-screen button, #updates-screen button, #power-ups-screen button, #leaderboard-screen button {
     display: block;
     margin: 15px auto;
     padding: 12px 25px;
@@ -120,7 +120,7 @@ body {
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Black outline */
 }
 
-#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #level-select-page-3 button:hover, #level-select-page-4 button:hover, #level-select-page-5 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #achievements-screen button:not(.tab-button):hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover, #updates-screen button:hover, #power-ups-screen button:hover, #leaderboard-screen button:hover {
+#start-screen button:hover, #pause-screen button:hover, #settings-screen button:hover, #level-select-screen button:hover, #level-select-page-2 button:hover, #level-select-page-3 button:hover, #level-select-page-4 button:hover, #level-select-page-5 button:hover, #level-select-page-6 button:hover, #game-over-screen button:hover, #level-complete-screen button:hover, #instructions-screen button:hover, #stats-screen button:hover, #achievements-screen button:not(.tab-button):hover, #dev-tools-bubble button:hover, #power-up-menu button:hover, #level-start-screen button:hover, #updates-screen button:hover, #power-ups-screen button:hover, #leaderboard-screen button:hover {
     background: linear-gradient(135deg, #218838, #1e7e34);
     transform: scale(1.05); /* Slight enlargement */
 }
@@ -160,7 +160,7 @@ body {
     transform: translate(-50%, -50%) scale(0.75);
 }
 
-#level-columns, #level-columns-page-2, #level-columns-page-3, #level-columns-page-4, #level-columns-page-5 {
+#level-columns, #level-columns-page-2, #level-columns-page-3, #level-columns-page-4, #level-columns-page-5, #level-columns-page-6 {
     display: flex;
     justify-content: center;
     gap: 20px;
@@ -180,14 +180,14 @@ body {
     background: linear-gradient(135deg, #28a745, #218838);
 }
 
-#level-select-buttons, #level-select-buttons-page-2, #level-select-buttons-page-3, #level-select-buttons-page-4, #level-select-buttons-page-5, #power-up-menu-buttons {
+#level-select-buttons, #level-select-buttons-page-2, #level-select-buttons-page-3, #level-select-buttons-page-4, #level-select-buttons-page-5, #level-select-buttons-page-6, #power-up-menu-buttons {
     margin-top: 20px;
     display: flex;
     justify-content: center;
     gap: 20px;
 }
 
-#level-select-screen button:disabled, #level-select-page-2 button:disabled, #level-select-page-3 button:disabled, #level-select-page-4 button:disabled, #level-select-page-5 button:disabled, #power-up-menu button:disabled {
+#level-select-screen button:disabled, #level-select-page-2 button:disabled, #level-select-page-3 button:disabled, #level-select-page-4 button:disabled, #level-select-page-5 button:disabled, #level-select-page-6 button:disabled, #power-up-menu button:disabled {
     background: linear-gradient(135deg, #666666, #4d4d4d);
     cursor: not-allowed;
 }
