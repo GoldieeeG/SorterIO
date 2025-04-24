@@ -329,10 +329,14 @@ const xpPerShape = {
 };
 
 function getOffset(shape) {
+    if (!shape || !shape.type) {
+        console.error('Invalid shape in getOffset', shape);
+        return 0; // Default offset to prevent crash
+    }
     if (shape.type === 'cube') return 1.125;
     if (shape.type === 'triangle') return 0.75;
     if (shape.type === 'sphere') return 1.5;
-    if (shape.type === 'cone') return 1; // Updated from 0 to 1
+    if (shape.type === 'cone') return 1;
     if (shape.type.startsWith('powerUp')) return 1;
 }
 
@@ -2349,6 +2353,10 @@ function onMove(event) {
     }
 
     if (selectedItem && !isPaused) {
+        if (!selectedItem.userData || !selectedItem.userData.type) {
+            console.error('selectedItem has no userData.type', selectedItem);
+            return; // Skip this frame to prevent crash
+        }
         raycaster.setFromCamera(mouse, camera);
         const intersectPoint = new THREE.Vector3();
         if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
